@@ -19,7 +19,7 @@ public class playerController : MonoBehaviour
     [SerializeField] LayerMask ground;  // LayerMask variable created that will allow in the inspector to choopse which layers are considered "ground"
 
     public float jumpHeight = 6f;  // How high the player can jump.
-    float velocityY;  // Tracks the player's vertical velocity (for jumping and falling).
+    public float velocityY;  // Tracks the player's vertical velocity (for jumping and falling).
     bool isGrounded;  // Whether the player is currently on the ground.
 
     float cameraCap;  // This prevents the camera from looking too far up or down.
@@ -72,24 +72,36 @@ public class playerController : MonoBehaviour
 
         currentDir = Vector2.SmoothDamp(currentDir, targetDir, ref currentDirVelocity, moveSmoothTime);  // Smooths out player movement direction changes.
 
-        velocityY += gravity * 2f * Time.deltaTime;  // Applies gravity to the vertical velocity (pulling the player down).
-        
         Vector3 velocity = (transform.forward * currentDir.y + transform.right * currentDir.x) * Speed + Vector3.up * velocityY;  // Combines movement and gravity to create the total velocity.
 
         controller.Move(velocity * Time.deltaTime);  // Moves the player using the CharacterController, accounting for the calculated velocity.
 
-        if (isGrounded && Input.GetButtonDown("Jump"))  // Checks if the player is on the ground and presses the jump button.
+
+        if(isGrounded) //Checks if the player is touching the ground
         {
-            velocityY = Mathf.Sqrt(jumpHeight * -2f * gravity);  // Calculates the jump velocity using physics (gravity and jump height).
+           if(velocityY < 0) //Checks if the player has a negative y velocity (AKA if the player fell before they hit the ground)
+           {
+                velocityY = 0; //If the player's y velocity is negative while grounded, it will turn to 0
+           }
+
+            if(Input.GetButtonDown("Jump"))//Checks if the player presses the jump button
+            {
+                velocityY = Mathf.Sqrt(jumpHeight * -2f * gravity);  // Calculates the jump velocity using physics (gravity and jump height).
+            }
         }
 
-        if (!isGrounded && controller.velocity.y < -1f)  // If the player is falling (not grounded and falling fast), reset the velocityY to a default falling value.
+
+        if (!isGrounded ) //Checks if the player is not touching the ground
         {
-            velocityY = -8f;
+            velocityY += gravity * 2f * Time.deltaTime;  // Applies gravity to the vertical velocity (pulling the player down) while player is not touching the ground
+
+            if(controller.velocity.y < -20f) // If the player is falling (not grounded and falling fast), reset the velocityY to a default falling value.
+            {
+                velocityY = -20f; //The maximum falling velocity a player can reach
+            }
+            
         }
     }
-
-
 
 
 }
