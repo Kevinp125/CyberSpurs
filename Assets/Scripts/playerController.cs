@@ -20,7 +20,7 @@ public class playerController : MonoBehaviour
 
     public float jumpHeight = 6f;  // How high the player can jump.
     public float velocityY;  // Tracks the player's vertical velocity (for jumping and falling).
-    bool isGrounded;  // Whether the player is currently on the ground.
+    public bool isGrounded;  // Whether the player is currently on the ground.
 
     float cameraCap;  // This prevents the camera from looking too far up or down.
     Vector2 currentMouseDelta;  // Tracks the current movement of the mouse.
@@ -65,7 +65,7 @@ public class playerController : MonoBehaviour
 
     void UpdateMove()
     {
-        isGrounded = Physics.CheckSphere(groundCheck.position, 0.2f, ground);  // Checks if the player is on the ground by creating a small sphere at the ground check position.
+        isGrounded = Physics.CheckSphere(groundCheck.position, 0.02f, ground);  // Checks if the player is on the ground by creating a small sphere at the ground check position.
 
         Vector2 targetDir = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));  // Reads raw input for horizontal (A/D or Left/Right) and vertical (W/S or Up/Down) movement.
         targetDir.Normalize();  // Ensures movement input has a consistent magnitude.
