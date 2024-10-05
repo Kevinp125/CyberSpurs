@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 using UnityEngine;
 
 public class Gun : MonoBehaviour //A script that houses all the basic functions of a gun, like shooting, reloading, and how much ammo and mag size a gun has at that moment
@@ -13,6 +14,8 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
     //Variables that house the time since the last shot taken, and the amount of ammo currently in the gun
     float timeSinceLastShot;
     public float localAmmo;
+
+    public Text ammoText;
 
     //A method that only activates at the start of a session
     private void Start()
@@ -27,7 +30,7 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
     {
         //An if statement that allows the gun to reload if the "reloading" boolean variable is set to false
         if (!gunData.reloading)
-        { 
+        {
             StartCoroutine(Reload());
         }
     }
@@ -35,7 +38,7 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
     // A function that reloads the gun with new ammo
     private IEnumerator Reload()
     {
-        
+
         gunData.reloading = true; //Sets the "reloading" boolean variable to true for the duration of the reloading phase
 
         yield return new WaitForSeconds(gunData.reloadTime); //Does not allow any gun actions to occur for the duration of the user specified reload time
@@ -50,13 +53,13 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
     public void Shoot()
     {
         //An if statement that allows the gun to shoot if the current amount of ammo in the gun is greater than 0
-        if(localAmmo > 0)
+        if (localAmmo > 0)
         {
             //An if statement that allows the gun to shoot if the "CanShoot" function returns a true function
-            if(CanShoot())
+            if (CanShoot())
             {
                 //An if statement that allows the gun to "damage" a target if the target is within the calculated max distance
-                if(Physics.Raycast(muzzle.position, muzzle.forward, out RaycastHit hitInfo, gunData.maxDistance))
+                if (Physics.Raycast(muzzle.position, muzzle.forward, out RaycastHit hitInfo, gunData.maxDistance))
                 {
                     IDamageable damageable = hitInfo.transform.GetComponent<IDamageable>(); //Gets the components from the "IDamageable" interface, which for now is just the "damage" function
                     damageable?.Damage(gunData.damage); //Calls the "damage" function with the gun's "damage" data as its only parameter
@@ -78,6 +81,11 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
 
         //Draws a vector from the gun's muzzle to indicate where it is pointing
         Debug.DrawRay(muzzle.position, muzzle.forward);
+    }
+
+    private void textUpdate()
+    {
+        ammoText.text = localAmmo + "/" + gunData.magSize;
     }
 
     //A function that will get called everytime the gun is shot
