@@ -65,7 +65,7 @@ public class playerController : MonoBehaviour
 
     void UpdateMove()
     {
-        isGrounded = Physics.CheckSphere(groundCheck.position, 0.02f, ground);  // Checks if the player is on the ground by creating a small sphere at the ground check position.
+        isGrounded = Physics.CheckSphere(groundCheck.position, 0.1f, ground);  // Checks if the player is on the ground by creating a small sphere at the ground check position.
 
         Vector2 targetDir = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));  // Reads raw input for horizontal (A/D or Left/Right) and vertical (W/S or Up/Down) movement.
         targetDir.Normalize();  // Ensures movement input has a consistent magnitude.
