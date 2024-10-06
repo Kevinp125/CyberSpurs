@@ -11,7 +11,10 @@ public class playerTakedown : MonoBehaviour
     [SerializeField] private Transform takedownCheck;
     [SerializeField] private Text takedownText;
 
+    private Color purple = Color.magenta;
+
     public bool canTakedown;
+    public bool canSee;
 
     // Start is called before the first frame update
     void Start()
@@ -24,21 +27,25 @@ public class playerTakedown : MonoBehaviour
     {
         canTakedown = Physics.CheckSphere(takedownCheck.position, 3f, enemy);
 
+        Debug.DrawRay(takedownCheck.position, takedownCheck.forward);
+
         takedownText.text = "Cannot Takedown";
 
-        if (canTakedown)
+        if (canTakedown && Physics.Raycast(takedownCheck.position, takedownCheck.forward, out RaycastHit hitInfo, 100, enemy))
         {
-            Collider[] takedownColliders = Physics.OverlapSphere(takedownCheck.position, 3f, enemy);
-
-            Debug.Log("Array Length" + takedownColliders.Length);
-
             takedownText.text = "Can Takedown";
+            hitInfo.transform.GetComponentInChildren<MeshRenderer>().material.color = purple;
 
             if (Input.GetKeyDown(takedownKey))
             {
-                IDamageable damageable = takedownColliders[takedownColliders.Length - 1].GetComponent<IDamageable>();
-                damageable?.Damage(10000);
+                IDamageable damageable = hitInfo.transform.GetComponent<IDamageable>(); //Gets the components from the "IDamageable" interface, which for now is just the "damage" function
+                
+                damageable?.Damage(10000); //Calls the "damage" function with the gun's "damage" data as its only parameter
+                Debug.Log(hitInfo.transform.name);
             }
+                
+            
+            
         }
     }
 
