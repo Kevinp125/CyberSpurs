@@ -40,11 +40,15 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
     {
 
         gunData.reloading = true; //Sets the "reloading" boolean variable to true for the duration of the reloading phase
+        ammoText.text = "Reloading..."; //Sets the ammo text to show "reloading"
 
         yield return new WaitForSeconds(gunData.reloadTime); //Does not allow any gun actions to occur for the duration of the user specified reload time
 
         localAmmo = gunData.magSize; //Sets the current ammo of the gun back to maximum
         gunData.reloading = false; //Sets the "reloading" boolean variable back to false to allow the player to reload again if they want to
+
+        
+        textUpdate(); //Calls upon the "textUpdate" function after reloading is done
     }
 
     private bool CanShoot() => !gunData.reloading && timeSinceLastShot > 1f / (gunData.fireRate / 60f); // A boolean function that only allows the gun to shoot if the gun is not "reloading" and if the "timesinceLastShot" variable is higher than the user specified firerate
@@ -68,7 +72,9 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
 
                 localAmmo--; // Removes one round from the current ammo
                 timeSinceLastShot = 0; //Sets the "timeSinceLastShot" variable to 0, making it so the gun cannot shoot again until enough time has passed
-                OnGunShot(); // A function that will activate once the gun is shot (Nothing is in this function yet as we do not have anything for the gun to do on shot yet)
+                OnGunShot(); // A function that will activate once the gun is shot 
+
+                
             }
         }
     }
@@ -79,18 +85,22 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
         //Adds time to the "timeSinceLastShot" variable
         timeSinceLastShot += Time.deltaTime;
 
+        
+
         //Draws a vector from the gun's muzzle to indicate where it is pointing
         Debug.DrawRay(muzzle.position, muzzle.forward);
     }
 
+    //A function that updates the ammo text whenever the gun is shooting or reloading
     private void textUpdate()
     {
-        ammoText.text = localAmmo + "/" + gunData.magSize;
+        
+        ammoText.text = localAmmo + " / " + gunData.magSize; //Converts the local ammo and the mag size of the gun into text
     }
 
     //A function that will get called everytime the gun is shot
     private void OnGunShot()
     {
-
+        textUpdate();
     }
 }
