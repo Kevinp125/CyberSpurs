@@ -12,11 +12,10 @@ public class playerTakedown : MonoBehaviour
     [SerializeField] private Transform takedownCheck;
     [SerializeField] private Text takedownText;
 
-    private Color purple = Color.magenta;
-    private Color previous;
+    
 
     public bool canTakedown;
-    public bool canSee;
+    
 
     // Start is called before the first frame update
     void Start()
@@ -35,10 +34,6 @@ public class playerTakedown : MonoBehaviour
         if (Physics.Raycast(takedownCheck.position, takedownCheck.forward, out RaycastHit hitInfo, 3f, enemyShadow) && Physics.CheckSphere(takedownCheck.position, 1f, shadow))
         {
             takedownText.text = "Can Takedown";
-            previous = hitInfo.transform.GetComponentInChildren<MeshRenderer>().material.color;
-
-            
-            hitInfo.transform.GetComponentInChildren<MeshRenderer>().material.color = purple;
 
             if (Input.GetKeyDown(takedownKey))
             {
