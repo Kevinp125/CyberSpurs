@@ -7,7 +7,8 @@ public class playerTakedown : MonoBehaviour
     [Header("Refernces")]
 
     [SerializeField] private KeyCode takedownKey;
-    [SerializeField] LayerMask enemy;
+    [SerializeField] LayerMask enemyShadow;
+    [SerializeField] LayerMask shadow;
     [SerializeField] private Transform takedownCheck;
     [SerializeField] private Text takedownText;
 
@@ -30,7 +31,8 @@ public class playerTakedown : MonoBehaviour
 
         takedownText.text = "Cannot Takedown";
 
-        if (Physics.Raycast(takedownCheck.position, takedownCheck.forward, out RaycastHit hitInfo, 3f, enemy))
+
+        if (Physics.Raycast(takedownCheck.position, takedownCheck.forward, out RaycastHit hitInfo, 3f, enemyShadow) && Physics.CheckSphere(takedownCheck.position, 1f, shadow))
         {
             takedownText.text = "Can Takedown";
             previous = hitInfo.transform.GetComponentInChildren<MeshRenderer>().material.color;
