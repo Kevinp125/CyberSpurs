@@ -10,6 +10,9 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
     [Header("References")]
     [SerializeField] private gunData gunData; //The gunData script is a script that houses all the data that the "Gun" scirpt then uses to make functions for the fun. Things such as how much damage each shot takes, how many shots are in one mag, etc.
     [SerializeField] private Transform muzzle; //The "muzzle" is just an empty GameObject that acts as a point for the gun to know where the bullet comes out
+    [SerializeField] private Transform hitScan; //variable is to assign the correct camera so that the hitscan is right when the player sho
+    [SerializeField] private GameObject bulletPrefab; // Reference to the bullet prefab (your bullet asset)
+    [SerializeField] private float bulletSpeed = 20f; // Speed of the bullet
 
     //Variables that house the time since the last shot taken, and the amount of ammo currently in the gun
     float timeSinceLastShot;
@@ -57,25 +60,47 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
     public void Shoot()
     {
         //An if statement that allows the gun to shoot if the current amount of ammo in the gun is greater than 0
-        if (localAmmo > 0)
+        if (localAmmo > 0 && CanShoot())
         {
-            //An if statement that allows the gun to shoot if the "CanShoot" function returns a true function
-            if (CanShoot())
-            {
-                //An if statement that allows the gun to "damage" a target if the target is within the calculated max distance
-                if (Physics.Raycast(muzzle.position, muzzle.forward, out RaycastHit hitInfo, gunData.maxDistance))
-                {
-                    IDamageable damageable = hitInfo.transform.GetComponent<IDamageable>(); //Gets the components from the "IDamageable" interface, which for now is just the "damage" function
-                    damageable?.Damage(gunData.damage); //Calls the "damage" function with the gun's "damage" data as its only parameter
-                    Debug.Log(hitInfo.transform.name);
-                }
+           Ray ray = new Ray(hitScan.position, hitScan.forward);
+           Vector3 targetPoint;
 
-                localAmmo--; // Removes one round from the current ammo
-                timeSinceLastShot = 0; //Sets the "timeSinceLastShot" variable to 0, making it so the gun cannot shoot again until enough time has passed
-                OnGunShot(); // A function that will activate once the gun is shot 
+            // Perform raycast to detect if there's an object in front of the crosshair
+            if (Physics.Raycast(ray, out RaycastHit hitInfo, gunData.maxDistance))
+            {
+                targetPoint = hitInfo.point;  // If something is hit, set the target point to the hit position
+            }
+            else
+            {
+                targetPoint = ray.GetPoint(gunData.maxDistance);  // If nothing is hit, use a far point
+            }
+
+            // Calculate the direction from the bullet exit to the target point
+            Vector3 directionToTarget = (targetPoint - muzzle.position).normalized;
+
+            // Instantiate the bullet at the bulletExit point and make it face the target direction
+            GameObject bullet = Instantiate(bulletPrefab, muzzle.position, Quaternion.LookRotation(directionToTarget));
+            Rigidbody rb = bullet.GetComponent<Rigidbody>(); //gets the rigidbody component of the bullet
+
+            if (rb != null) //if this doesnt return null it means bullet has rigid body so give it some velocity so that it launches forward
+            { 
+                rb.velocity = directionToTarget * bulletSpeed; //multiplying it by the correct vector we got from the ray cast fires the bullet towards the crosshair
+            }
+        
+            //An if statement that allows the gun to "damage" a target if the target is within the calculated max distance
+            if (Physics.Raycast(ray, out hitInfo, gunData.maxDistance))
+            {
+                IDamageable damageable = hitInfo.transform.GetComponent<IDamageable>(); //Gets the components from the "IDamageable" interface, which for now is just the "damage" function
+                damageable?.Damage(gunData.damage); //Calls the "damage" function with the gun's "damage" data as its only parameter
+                Debug.Log(hitInfo.transform.name);
+            }
+
+            localAmmo--; // Removes one round from the current ammo
+            timeSinceLastShot = 0; //Sets the "timeSinceLastShot" variable to 0, making it so the gun cannot shoot again until enough time has passed
+            OnGunShot(); // A function that will activate once the gun is shot 
 
                 
-            }
+    
         }
     }
 
