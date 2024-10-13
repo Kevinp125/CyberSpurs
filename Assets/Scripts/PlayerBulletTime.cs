@@ -16,7 +16,15 @@ public class PlayerBulletTime : MonoBehaviour
     [SerializeField] private LayerMask enemyLayer;  // LayerMask for enemies
     [SerializeField] private LayerMask shadowLayer;  // LayerMask for shadows
     [SerializeField] private float bulletTimeScale = 0.2f;  // LayerMask for shadows
-    [SerializeField] private float bulletTimeMeterIncrease = 20f;
+    [SerializeField] private float bulletTimeMeterIncrease = 20f;   
+
+    //below variables all have to do with bullettime FOV changes
+
+    [SerializeField] private Camera playerCamera;  // Reference to the player's camera
+    [SerializeField] private float normalFOV = 60f;  // Normal field of view
+    [SerializeField] private float bulletTimeFOV = 80f;  // Wider field of view for bullet time
+    [SerializeField] private float fovTransitionSpeed = 2f;  // Speed at which FOV changes
+
 
     // UI elements (optional)
     public Image bulletTimeBar;  // Progress bar for the bullet time meter
@@ -29,6 +37,17 @@ public class PlayerBulletTime : MonoBehaviour
             ActivateBulletTime();  // Activate bullet time when the meter is full
         }
 
+        if (isBulletTimeActive)
+        {
+            // Smooth transition to bullet time FOV
+            playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, bulletTimeFOV, fovTransitionSpeed * Time.deltaTime);
+        }
+        else
+        {
+            // Smooth transition back to normal FOV
+            playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, normalFOV, fovTransitionSpeed * Time.deltaTime);
+        }
+        
         // Update the UI for the bullet time meter (optional)
         if (bulletTimeBar != null)
         {
