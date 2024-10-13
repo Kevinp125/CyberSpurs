@@ -7,6 +7,7 @@ public class enemyHealth : MonoBehaviour, IDamageable
 {
     [SerializeField] private enemyStats enemyStats;
     [SerializeField] private Slider healthBarSlider;
+    public PlayerBulletTime playerBulletTime; //getting a reference to our BulletTime script so we can call our OnEnemyKilled() fucnction
 
     public float currentHealth;
 
@@ -25,10 +26,19 @@ public class enemyHealth : MonoBehaviour, IDamageable
 
     private void CheckIfDead()
     {
-        if(currentHealth <= 0)
+         if (currentHealth <= 0)
+    {
+        if (playerBulletTime != null)
         {
-            Destroy(gameObject);
+            playerBulletTime.OnEnemyKilled();
         }
+        else
+        {
+            Debug.LogError("playerBulletTime is null! Ensure it's assigned.");
+        }
+
+        Destroy(gameObject);
+    }
     }
 
     private void SetHealhBarUI()
