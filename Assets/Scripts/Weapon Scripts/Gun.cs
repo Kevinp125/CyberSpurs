@@ -13,6 +13,7 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
     [SerializeField] private Transform hitScan; //variable is to assign the correct camera so that the hitscan is right when the player sho
     [SerializeField] private GameObject bulletPrefab; // Reference to the bullet prefab (your bullet asset)
     [SerializeField] private float bulletSpeed = 20f; // Speed of the bullet
+    [SerializeField] private LayerMask layerIgnore; // Speed of the bullet
 
     //Variables that house the time since the last shot taken, and the amount of ammo currently in the gun
     float timeSinceLastShot;
@@ -66,7 +67,7 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
            Vector3 targetPoint;
 
             // Perform raycast to detect if there's an object in front of the crosshair
-            if (Physics.Raycast(ray, out RaycastHit hitInfo, gunData.maxDistance))
+            if (Physics.Raycast(ray, out RaycastHit hitInfo, gunData.maxDistance, layerIgnore))
             {
                 targetPoint = hitInfo.point;  // If something is hit, set the target point to the hit position
             }
@@ -88,7 +89,7 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
             }
         
             //An if statement that allows the gun to "damage" a target if the target is within the calculated max distance
-            if (Physics.Raycast(ray, out hitInfo, gunData.maxDistance))
+            if (Physics.Raycast(ray, out hitInfo, gunData.maxDistance, layerIgnore))
             {
                 IDamageable damageable = hitInfo.transform.GetComponent<IDamageable>(); //Gets the components from the "IDamageable" interface, which for now is just the "damage" function
                 damageable?.Damage(gunData.damage); //Calls the "damage" function with the gun's "damage" data as its only parameter
