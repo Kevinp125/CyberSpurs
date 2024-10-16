@@ -10,7 +10,6 @@ public class PlayerBulletTime : MonoBehaviour
     public float maxBulletTimeMeter = 100f;  // Max value for the bullet time meter
     public float bulletTimeDuration = 5f;  // Duration of bullet time (in seconds)
     private bool isBulletTimeActive = false;  // Is bullet time currently active?
-    private bool isInShadows = false;  // Tracks if the player is in the shadows
     [SerializeField] private KeyCode activationKey = KeyCode.B;
     [SerializeField] private Transform takedownCheck;  // Position to raycast from (e.g., player)
     [SerializeField] private LayerMask enemyLayer;  // LayerMask for enemies
@@ -26,8 +25,13 @@ public class PlayerBulletTime : MonoBehaviour
     [SerializeField] private float fovTransitionSpeed = 2f;  // Speed at which FOV changes
 
 
+ 
     // UI elements (optional)
-    public Image bulletTimeBar;  // Progress bar for the bullet time meter
+    public Slider bulletTimeBar;  // Progress bar for the bullet time meter
+
+    public Image kadePortrait;  // HUD image object showing Kade's portrait and visibility status
+    public Sprite kadeVisible;  // Kade's visible sprite portrait asset
+    public Sprite kadeHidden;   // Kade's hidden sprite portrait asset
 
     void Update()
     {
@@ -51,8 +55,13 @@ public class PlayerBulletTime : MonoBehaviour
         // Update the UI for the bullet time meter (optional)
         if (bulletTimeBar != null)
         {
-            bulletTimeBar.fillAmount = bulletTimeMeter / maxBulletTimeMeter;  // Update the progress bar
+            bulletTimeBar.value = bulletTimeMeter; //update progress bar
+            bulletTimeBar.maxValue = maxBulletTimeMeter;
         }
+
+        CheckIfKadeInShadow();
+
+
     }
 
     // Call this function when an enemy is killed outside the shadows
@@ -102,6 +111,19 @@ public class PlayerBulletTime : MonoBehaviour
 
         // If neither the enemy nor player is in the shadow, return false
         return false;
+    }
+
+    void CheckIfKadeInShadow(){
+        if (Physics.CheckSphere(takedownCheck.position, 1f, shadowLayer))
+        {
+            kadePortrait.sprite = kadeHidden;
+        }
+
+        else
+        {
+            kadePortrait.sprite = kadeVisible;
+        }
+
     }
 
     // Function to activate bullet time
