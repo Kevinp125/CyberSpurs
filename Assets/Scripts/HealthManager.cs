@@ -54,6 +54,7 @@ public class HealthManager : MonoBehaviour
             {
                 gameOverText.text = "";
                 Time.timeScale = 1;
+                Instance.BecomeTemporarilyInvincible();
             }
         }
     }
