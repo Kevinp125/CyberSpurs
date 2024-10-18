@@ -5,18 +5,32 @@ using UnityEngine.UI;
 
 public class HealthManager : MonoBehaviour
 {
+    public static HealthManager Instance { get; private set; }
+
     private static int playerHP;
     public int maxHP;
-    public int invincibilitySeconds; 
+    public int invincibilitySeconds;
 
     public static bool isGameOver;
-    public bool isInvincible;
+    public static bool isInvincible;
 
     public Slider healthBarSlider;
-
     public Text gameOverText;
-
+    public Text healthText;
     public KeyCode respawnKey;
+
+    private void Awake()
+    {
+        // Ensure there's only one instance of HealthManager
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -30,6 +44,7 @@ public class HealthManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        healthText.text = CalculateHealthPercentage() + "";
         SetHealhBarUI();
 
         if (isGameOver)
@@ -47,16 +62,23 @@ public class HealthManager : MonoBehaviour
 
     public static void Damage(int damageAmount)
     {
-        playerHP -= damageAmount;
-
-        if(playerHP <= 0)
+        
+        if(isInvincible)
         {
-            isGameOver = true;
+            return;
         }
 
+        else
+        {
+            playerHP -= damageAmount;
 
-        StartCoroutine(BecomeTemporarilyInvincible());
+            if (playerHP <= 0)
+            {
+                isGameOver = true;
+            }
 
+            Instance.StartCoroutine(Instance.BecomeTemporarilyInvincible());
+        }
 
     }
 
@@ -68,7 +90,7 @@ public class HealthManager : MonoBehaviour
         yield return new WaitForSeconds(invincibilitySeconds);
 
         isInvincible = false;
-\
+
     }
 
     private void SetHealhBarUI()
@@ -78,6 +100,6 @@ public class HealthManager : MonoBehaviour
 
     private float CalculateHealthPercentage()
     {
-        return (playerHP / maxHP) * 100;
+        return ((float)playerHP / (float)maxHP) * 100;
     }
 }
