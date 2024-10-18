@@ -7,6 +7,7 @@ public class enemyCollision : MonoBehaviour
     public float collisionRadius;
 
     public int damageAmount;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -25,5 +26,6 @@ public class enemyCollision : MonoBehaviour
                 HealthManager.Damage(damageAmount);
             }
         }
+
     }
 }

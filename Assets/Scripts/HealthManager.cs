@@ -16,7 +16,6 @@ public class HealthManager : MonoBehaviour
 
     public Slider healthBarSlider;
     public Text gameOverText;
-    public Text healthText;
     public KeyCode respawnKey;
 
     private void Awake()
@@ -44,7 +43,6 @@ public class HealthManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        healthText.text = CalculateHealthPercentage() + "";
         SetHealhBarUI();
 
         if (isGameOver)
