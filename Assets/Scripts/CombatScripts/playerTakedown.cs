@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;using UnityEngine.UI;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class playerTakedown : MonoBehaviour
 {
@@ -10,7 +12,7 @@ public class playerTakedown : MonoBehaviour
     [SerializeField] LayerMask enemyShadow;
     [SerializeField] LayerMask shadow;
     [SerializeField] private Transform takedownCheck;
-    [SerializeField] private Text takedownText;
+    [SerializeField] private TextMeshProUGUI takedownText;
 
     
 

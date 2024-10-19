@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
+using TMPro;
 
 public class Gun : MonoBehaviour //A script that houses all the basic functions of a gun, like shooting, reloading, and how much ammo and mag size a gun has at that moment
 {
@@ -19,7 +20,7 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
     float timeSinceLastShot;
     public float localAmmo;
 
-    public Text ammoText;
+    public TextMeshProUGUI ammoText;
 
     //A method that only activates at the start of a session
     private void Start()
