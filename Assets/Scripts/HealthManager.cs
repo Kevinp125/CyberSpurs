@@ -81,6 +81,27 @@ public class HealthManager : MonoBehaviour
 
     }
 
+    public static void Regen(int regenAmount)
+    {
+        if(playerHP < Instance.maxHP)
+        {
+            playerHP += regenAmount;
+
+            if(playerHP > Instance.maxHP)
+            {
+                playerHP = Instance.maxHP;
+            }
+        }
+
+        else
+        {
+            return;
+        }
+
+
+        
+    }
+
     private IEnumerator BecomeTemporarilyInvincible()
     {
         

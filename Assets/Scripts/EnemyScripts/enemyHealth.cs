@@ -27,18 +27,18 @@ public class enemyHealth : MonoBehaviour, IDamageable
     private void CheckIfDead()
     {
          if (currentHealth <= 0)
-    {
-        if (playerBulletTime != null)
         {
-            playerBulletTime.OnEnemyKilled();
-        }
-        else
-        {
-            Debug.LogError("playerBulletTime is null! Ensure it's assigned.");
-        }
+            if (playerBulletTime != null)
+            {
+                playerBulletTime.OnEnemyKilled();
+            }
+            else
+            {
+                Debug.LogError("playerBulletTime is null! Ensure it's assigned.");
+            }
 
-        Destroy(gameObject);
-    }
+            Destroy(gameObject);
+        }
     }
 
     private void SetHealhBarUI()
