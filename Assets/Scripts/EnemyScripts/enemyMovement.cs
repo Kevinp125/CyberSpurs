@@ -12,6 +12,8 @@ public class enemyMovement : MonoBehaviour
     public float speed;
     public float multiplier;
     public float speedLimit;
+
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -35,7 +37,10 @@ public class enemyMovement : MonoBehaviour
             if(enemyVision.found && vel.x > -2 && vel.x < speedLimit && vel.z > -2 && vel.z < speedLimit)
             {
                 RB.AddForce(speed * multiplier * Time.deltaTime * transform.forward);
+                
             }
+
+
         }
     }
 }
