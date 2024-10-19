@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;using UnityEngine.UI;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class playerTakedown : MonoBehaviour
 {
@@ -10,12 +12,13 @@ public class playerTakedown : MonoBehaviour
     [SerializeField] LayerMask enemyShadow;
     [SerializeField] LayerMask shadow;
     [SerializeField] private Transform takedownCheck;
-    [SerializeField] private Text takedownText;
+    [SerializeField] private TextMeshProUGUI takedownText;
 
     
 
     public bool canTakedown;
-    
+
+    public int healthRegen;
 
     // Start is called before the first frame update
     void Start()
@@ -41,6 +44,8 @@ public class playerTakedown : MonoBehaviour
                 
                 damageable?.Damage(10000); //Calls the "damage" function with the gun's "damage" data as its only parameter
                 Debug.Log(hitInfo.transform.name);
+
+                HealthManager.Regen(healthRegen);
             }
                 
             
