@@ -52,10 +52,12 @@ public class HealthManager : MonoBehaviour
 
             if(Input.GetKeyDown(respawnKey))
             {
+                isGameOver = false;
+                Instance.BecomeTemporarilyInvincible();
                 gameOverText.text = "";
                 Time.timeScale = 1;
                 playerHP = maxHP;
-                Instance.BecomeTemporarilyInvincible();
+                
             }
         }
     }
