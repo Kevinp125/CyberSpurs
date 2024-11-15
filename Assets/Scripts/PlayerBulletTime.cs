@@ -89,6 +89,33 @@ public class PlayerBulletTime : MonoBehaviour
         }
     }
 
+    public void IncreaseBulletTime(float percent) //this function is called when fighting the boss since we inccrease bulllet time meter depending on if we damage boss outside of shadows not if we kill it.
+    {
+        if (CheckEnemyAndPlayerInShadow())
+        {
+            // Do nothing or handle shadow case (optional)
+            Debug.Log("Enemy is in the shadow, no bullet time increase.");
+        }
+        
+        else{
+
+            // Increase the bullet time meter based on the given percentage
+            bulletTimeMeter += maxBulletTimeMeter * (percent / 100f);
+
+            // Clamp the value to ensure it doesn't exceed the maximum
+            bulletTimeMeter = Mathf.Clamp(bulletTimeMeter, 0f, maxBulletTimeMeter);
+
+            // Update the UI
+            if (bulletTimeBar != null)
+            {
+                bulletTimeBar.value = bulletTimeMeter;
+            }
+
+            Debug.Log("Bullet Time Meter: " + bulletTimeMeter);
+        }
+    
+    }   
+
     // Function to check if both the enemy and player are in the shadows
     bool CheckEnemyAndPlayerInShadow()
     {
