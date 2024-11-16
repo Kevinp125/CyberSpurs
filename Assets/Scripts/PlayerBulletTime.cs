@@ -10,6 +10,7 @@ public class PlayerBulletTime : MonoBehaviour
     public float maxBulletTimeMeter = 100f;  // Max value for the bullet time meter
     public float bulletTimeDuration = 5f;  // Duration of bullet time (in seconds)
     private bool isBulletTimeActive = false;  // Is bullet time currently active?
+    public bool isPlayerInShadows { get; private set; }  // Public read, private write. Setting this bool to use in other scripts
     [SerializeField] private KeyCode activationKey = KeyCode.B;
     [SerializeField] private Transform takedownCheck;  // Position to raycast from (e.g., player)
     [SerializeField] private LayerMask enemyLayer;  // LayerMask for enemies
@@ -145,11 +146,13 @@ public class PlayerBulletTime : MonoBehaviour
         if (Physics.CheckSphere(takedownCheck.position, 1f, shadowLayer))
         {
             kadePortrait.sprite = kadeHidden;
+            isPlayerInShadows = true;
         }
 
         else
         {
             kadePortrait.sprite = kadeVisible;
+            isPlayerInShadows = false;
         }
 
     }

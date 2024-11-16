@@ -20,6 +20,7 @@ public class BossHealth : MonoBehaviour, IDamageable
     public PlayerBulletTime playerBulletTime;
     public float currentHealth;
     private bool isPhaseTwo;
+    [SerializeField] private Shotgun shotgun;
 
     [Header("Bullet Time Settings")]
     [SerializeField] private float bulletTimeIncreasePercent = 10f;
@@ -120,9 +121,20 @@ public class BossHealth : MonoBehaviour, IDamageable
 
     private void AttackPlayer()
     {
-        // Example attack logic
-        Debug.Log("Boss is attacking!");
-        // Add attack animations, projectiles, etc., here
+        if (playerBulletTime.isPlayerInShadows)
+        {
+        // Adjust for shadow mechanics
+            shotgun.spreadAngle = 60f; // Wider spread
+            Debug.Log("Player is in the shadows! Boss fires blindly.");
+        }
+        else
+        {
+            // Default behavior
+            shotgun.spreadAngle = 30f;
+            Debug.Log("Player is not in the shadows! Boss fires accurately.");
+        }
+
+        shotgun.Fire();
     }
 
     private bool PlayerInSight()
