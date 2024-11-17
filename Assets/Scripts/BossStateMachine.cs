@@ -37,8 +37,8 @@ public class BossHealth : MonoBehaviour, IDamageable
     [Header("NavMesh Settings")]
     private NavMeshAgent navAgent;
     private Transform player; // Reference to the player
-    public float sightRange = 15f; // How far the boss can see the player
-    public float attackRange = 5f; // Range at which the boss attacks
+    [SerializeField] public float sightRange = 15f; // How far the boss can see the player
+    [SerializeField] public float attackRange = 5f; // Range at which the boss attacks
 
     private BossState currentState = BossState.Patrolling;
 

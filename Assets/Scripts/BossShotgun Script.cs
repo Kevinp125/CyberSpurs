@@ -28,7 +28,7 @@ public class Shotgun : MonoBehaviour
                 0,
                 Random.Range(-spreadAngle / 2, spreadAngle / 2),
                 0
-            ) * transform.forward;
+            ) * firePoint.forward;
             
             if (projectilePrefab == null || firePoint == null)
             {
@@ -38,7 +38,7 @@ public class Shotgun : MonoBehaviour
             
             // Instantiate projectile
             GameObject projectile = Instantiate(projectilePrefab, firePoint.position, Quaternion.LookRotation(spreadDirection));
-
+            Debug.DrawLine(firePoint.position, firePoint.position + firePoint.forward * 5, Color.green, 2f);
             if (projectile != null)
             {
                 Debug.Log($"Projectile {i + 1} instantiated successfully at {firePoint.position}.");
