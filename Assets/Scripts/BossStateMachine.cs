@@ -40,6 +40,7 @@ public class BossHealth : MonoBehaviour, IDamageable
     [SerializeField] public float sightRange = 15f; // How far the boss can see the player
     [SerializeField] public float attackRange = 5f; // Range at which the boss attacks
 
+    private List<GameObject> activeGuardDogs = new List<GameObject>();
     private BossState currentState = BossState.Patrolling;
 
     private void Start()
@@ -157,6 +158,12 @@ public class BossHealth : MonoBehaviour, IDamageable
 
     public void Damage(float damage)
     {
+        if (isPhaseTwo && activeGuardDogs.Count > 0)
+        {
+            Debug.Log("Boss is invulnerable until all guard dogs are defeated!");
+            return;
+        }
+
         currentHealth -= damage;
 
         if (playerBulletTime != null)
@@ -187,7 +194,30 @@ public class BossHealth : MonoBehaviour, IDamageable
 
         foreach (var spawnPoint in spawnPoints)
         {
-            Instantiate(guardDogs[Random.Range(0, guardDogs.Length)], spawnPoint.position, Quaternion.identity);
+            GameObject guardDog = Instantiate(
+                guardDogs[Random.Range(0, guardDogs.Length)], 
+                spawnPoint.position, 
+                Quaternion.identity
+            );
+
+            activeGuardDogs.Add(guardDog); // Track spawned guard dogs 
+        }
+
+    }
+
+    public void OnGuardDogDestroyed(GameObject guardDog)
+    {
+        // Remove the guard dog from the active list
+        activeGuardDogs.Remove(guardDog);
+        Debug.Log($"Guard dog defeated! Remaining: {activeGuardDogs.Count}");
+
+        // Check if all guard dogs are defeated
+        if (activeGuardDogs.Count == 0)
+        {
+            Debug.Log("All guard dogs are defeated! Boss can now take damage!");
+            // Optionally change the state or enable boss vulnerability
+            isPhaseTwo = false; // Boss becomes vulnerable again
+            currentState = BossState.Chasing; // Resume normal behavior
         }
     }
 
