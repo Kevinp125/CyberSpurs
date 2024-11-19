@@ -26,7 +26,7 @@ public class enemyHealth : MonoBehaviour, IDamageable
 
     private void CheckIfDead()
     {
-         if (currentHealth <= 0)
+        if (currentHealth <= 0)
         {
             if (playerBulletTime != null)
             {
