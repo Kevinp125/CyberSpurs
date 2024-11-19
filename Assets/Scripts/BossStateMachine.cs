@@ -20,6 +20,7 @@ public class BossHealth : MonoBehaviour, IDamageable
     public PlayerBulletTime playerBulletTime;
     public float currentHealth;
     private bool isPhaseTwo;
+    private bool isVulnerable = false; // Whether the boss can be damaged
     [SerializeField] private Shotgun shotgun;
 
     [Header("Bullet Time Settings")]
@@ -28,11 +29,12 @@ public class BossHealth : MonoBehaviour, IDamageable
     [Header("Phase Two Settings")]
     [SerializeField] private GameObject[] guardDogs;
     [SerializeField] private Transform[] spawnPoints;
+    [SerializeField] private float vulnerabilityDuration = 5f; // Time boss is vulnerable
+    [SerializeField] private float respawnDelay = 3f; // Time before respawning guard dogs
 
     [Header("Patrol Settings")]
     [SerializeField] private Transform[] patrolPoints; // Array of predefined patrol points
     private int currentPatrolIndex = 0; // Index of the current patrol point
-
 
     [Header("NavMesh Settings")]
     private NavMeshAgent navAgent;
@@ -85,9 +87,16 @@ public class BossHealth : MonoBehaviour, IDamageable
                 break;
 
             case BossState.PhaseTwo:
-                // Phase Two-specific behavior
+                PhaseTwoBehavior();
                 break;
         }
+    }
+
+    private void PhaseTwoBehavior()
+    {
+        // Keep chasing and attacking in Phase Two
+        ChasePlayer();
+        AttackPlayer();
     }
 
     private void Patrol()
@@ -98,16 +107,11 @@ public class BossHealth : MonoBehaviour, IDamageable
             return;
         }
 
-        // Get the current patrol point
         Transform targetPoint = patrolPoints[currentPatrolIndex];
-
-        // Set the destination for the NavMeshAgent
         navAgent.SetDestination(targetPoint.position);
 
-        // Check if the boss has reached the patrol point
         if (Vector3.Distance(transform.position, targetPoint.position) < 1f)
         {
-           // Move to the next patrol point (loop back to the first point if at the end)
             currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
         }
     }
@@ -124,13 +128,11 @@ public class BossHealth : MonoBehaviour, IDamageable
     {
         if (playerBulletTime.isPlayerInShadows)
         {
-        // Adjust for shadow mechanics
-            shotgun.spreadAngle = 60f; // Wider spread
+            shotgun.spreadAngle = 60f;
             Debug.Log("Player is in the shadows! Boss fires blindly.");
         }
         else
         {
-            // Default behavior
             shotgun.spreadAngle = 30f;
             Debug.Log("Player is not in the shadows! Boss fires accurately.");
         }
@@ -146,7 +148,6 @@ public class BossHealth : MonoBehaviour, IDamageable
         if (Vector3.Distance(transform.position, player.position) <= sightRange &&
             Vector3.Angle(transform.forward, directionToPlayer) < 45f)
         {
-            // Optionally add raycast for line of sight
             Ray ray = new Ray(transform.position, directionToPlayer);
             if (Physics.Raycast(ray, out RaycastHit hit, sightRange))
             {
@@ -158,22 +159,23 @@ public class BossHealth : MonoBehaviour, IDamageable
 
     public void Damage(float damage)
     {
-        if (isPhaseTwo && activeGuardDogs.Count > 0)
+        if (!isPhaseTwo || isVulnerable)
         {
-            Debug.Log("Boss is invulnerable until all guard dogs are defeated!");
-            return;
+            currentHealth -= damage;
+
+            if (playerBulletTime != null)
+            {
+                playerBulletTime.IncreaseBulletTime(bulletTimeIncreasePercent);
+            }
+
+            SetHealthBarUI();
+            CheckIfPhaseTwo();
+            CheckIfDead();
         }
-
-        currentHealth -= damage;
-
-        if (playerBulletTime != null)
+        else
         {
-            playerBulletTime.IncreaseBulletTime(bulletTimeIncreasePercent);
+            Debug.Log("Boss is invulnerable while guard dogs are active!");
         }
-
-        SetHealthBarUI();
-        CheckIfPhaseTwo();
-        CheckIfDead();
     }
 
     private void CheckIfPhaseTwo()
@@ -189,36 +191,44 @@ public class BossHealth : MonoBehaviour, IDamageable
         isPhaseTwo = true;
         currentState = BossState.PhaseTwo;
 
-        // Stop patrolling or chasing
-        if (navAgent != null) navAgent.ResetPath();
+        SpawnGuardDogs();
+    }
 
+    private void SpawnGuardDogs()
+    {
         foreach (var spawnPoint in spawnPoints)
         {
             GameObject guardDog = Instantiate(
-                guardDogs[Random.Range(0, guardDogs.Length)], 
-                spawnPoint.position, 
+                guardDogs[Random.Range(0, guardDogs.Length)],
+                spawnPoint.position,
                 Quaternion.identity
             );
 
-            activeGuardDogs.Add(guardDog); // Track spawned guard dogs 
+            activeGuardDogs.Add(guardDog);
         }
-
     }
 
     public void OnGuardDogDestroyed(GameObject guardDog)
     {
-        // Remove the guard dog from the active list
         activeGuardDogs.Remove(guardDog);
-        Debug.Log($"Guard dog defeated! Remaining: {activeGuardDogs.Count}");
 
-        // Check if all guard dogs are defeated
         if (activeGuardDogs.Count == 0)
         {
-            Debug.Log("All guard dogs are defeated! Boss can now take damage!");
-            // Optionally change the state or enable boss vulnerability
-            isPhaseTwo = false; // Boss becomes vulnerable again
-            currentState = BossState.Chasing; // Resume normal behavior
+            StartCoroutine(VulnerabilityWindow());
         }
+    }
+
+    private IEnumerator VulnerabilityWindow()
+    {
+        Debug.Log("Boss is vulnerable!");
+        isVulnerable = true;
+        yield return new WaitForSeconds(vulnerabilityDuration);
+
+        Debug.Log("Boss is no longer vulnerable. Respawning guard dogs...");
+        isVulnerable = false;
+        yield return new WaitForSeconds(respawnDelay);
+
+        SpawnGuardDogs();
     }
 
     private void CheckIfDead()
