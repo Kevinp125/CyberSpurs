@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Projectile : MonoBehaviour
+public class Projectile1 : MonoBehaviour
 {
     [SerializeField] private float speed = 10f;
     [SerializeField] private float lifeTime = 5f;
