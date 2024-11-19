@@ -6,8 +6,13 @@ public class PatrolState : baseState
 {
     public int waypointIndex;
     public float waitTimer;
+    
     public override void Enter()
     {
+        if (enemy.path.waypoints.Count > 0)
+        {
+            enemy.Agent.SetDestination(enemy.path.waypoints[0].position);
+        }
 
     }
 

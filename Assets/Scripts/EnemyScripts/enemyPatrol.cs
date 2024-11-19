@@ -1,31 +1,95 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
-public class enemyPatrol : MonoBehaviour
+public class EnemyPatrol: MonoBehaviour
 {
-    public Transform[] points;
+    [Header("Patrol Settings")]
+    [SerializeField] private List<Transform> waypoints; // List of patrol waypoints
+    [SerializeField] private float waitTime = 2f; // Time to wait at each waypoint
+    [SerializeField] private float stoppingDistance = 0.2f; // How close the agent needs to be to consider it reached the waypoint
 
-    int current;
+    [Header("Chase Settings")]
+    [SerializeField] private Transform player; // Reference to the player's Transform
+    [SerializeField] private float detectionRange = 10f; // Range within which the enemy will detect and chase the player
+    [SerializeField] private float chaseStoppingDistance = 2f; // Stopping distance when chasing the player
 
-    public float speed;
-    // Start is called before the first frame update
+    private NavMeshAgent agent;
+    private int currentWaypointIndex = 0;
+    private float waitTimer = 0;
+
+    private enum EnemyState { Patrolling, Chasing }
+    private EnemyState currentState = EnemyState.Patrolling;
+
     void Start()
     {
-        current = 0;
-    }
+        agent = GetComponent<NavMeshAgent>();
 
-    // Update is called once per frame
-    void Update()
-    {
-        if(transform.position != points[current].position)
+        if (waypoints.Count > 0)
         {
-            transform.position = Vector3.MoveTowards(transform.position, points[current].position, speed * Time.deltaTime);
+            // Set initial patrol destination
+            agent.SetDestination(waypoints[currentWaypointIndex].position);
         }
-
         else
         {
-            current = (current + 1) % points.Length;
+            Debug.LogWarning("No waypoints set for patrol.");
         }
+    }
+
+    void Update()
+    {
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+
+        if (distanceToPlayer <= detectionRange)
+        {
+            // Switch to chasing when the player is close
+            currentState = EnemyState.Chasing;
+        }
+        else
+        {
+            // Switch back to patrolling when the player is out of range
+            currentState = EnemyState.Patrolling;
+        }
+
+        if (currentState == EnemyState.Patrolling)
+        {
+            Patrol();
+        }
+        else if (currentState == EnemyState.Chasing)
+        {
+            ChasePlayer();
+        }
+    }
+
+    private void Patrol()
+    {
+        if (waypoints.Count == 0) return;
+
+        // Check if the agent is close enough to the current waypoint
+        if (!agent.pathPending && agent.remainingDistance <= stoppingDistance)
+        {
+            waitTimer += Time.deltaTime;
+
+            // If the agent has waited long enough, move to the next waypoint
+            if (waitTimer >= waitTime)
+            {
+                currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Count;
+                agent.SetDestination(waypoints[currentWaypointIndex].position);
+                waitTimer = 0;
+            }
+        }
+    }
+
+    private void ChasePlayer()
+    {
+        agent.stoppingDistance = chaseStoppingDistance; // Set stopping distance for chasing
+        agent.SetDestination(player.position); // Chase the player's position
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        // Visualize the detection range in the Scene view
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
     }
 }
