@@ -32,6 +32,11 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
 
+        if (!agent.enabled)
+        {
+            agent.enabled = true;
+        }
+
         if (waypoints.Count > 0)
         {
             agent.SetDestination(waypoints[currentWaypointIndex].position);
@@ -45,6 +50,12 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
     void Update()
     {
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(transform.position, out hit, 1.0f, NavMesh.AllAreas))
+        {
+            transform.position = hit.position; // Adjust the position to snap to NavMesh
+        }
 
         // Determine state based on player's distance
         if (distanceToPlayer <= shootRange)
@@ -73,6 +84,16 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
                 ShootPlayer();
                 break;
         }
+
+        if (agent.isOnNavMesh)
+        {
+            Debug.Log("Agent is on the NavMesh.");
+        }
+        else
+        {
+            Debug.LogError("Agent is NOT on the NavMesh.");
+        }
+
     }
 
     private void Patrol()
