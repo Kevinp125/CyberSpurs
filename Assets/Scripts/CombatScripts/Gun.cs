@@ -22,6 +22,9 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
 
     public TextMeshProUGUI ammoText;
 
+    public AudioSource shootAudio;      // Shoot sound effect
+    public AudioSource reloadAudio;     // Reload sound effect
+
     //A method that only activates at the start of a session
     private void Start()
     {
@@ -43,7 +46,7 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
     // A function that reloads the gun with new ammo
     private IEnumerator Reload()
     {
-
+        reloadAudio.Play();     // Play the reload sound effect
         gunData.reloading = true; //Sets the "reloading" boolean variable to true for the duration of the reloading phase
         ammoText.text = "Reloading..."; //Sets the ammo text to show "reloading"
 
@@ -101,8 +104,7 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
             timeSinceLastShot = 0; //Sets the "timeSinceLastShot" variable to 0, making it so the gun cannot shoot again until enough time has passed
             OnGunShot(); // A function that will activate once the gun is shot 
 
-                
-    
+            shootAudio.Play();      // Play the gunshot sound effect
         }
     }
 

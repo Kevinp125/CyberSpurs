@@ -11,6 +11,8 @@ public class Shotgun : MonoBehaviour
 
     private float lastFireTime; // Tracks the last time the shotgun fired
 
+    public AudioSource shotgunAudio;
+
     public void Fire()
     {
         if (Time.time - lastFireTime < 1f / fireRate)
@@ -19,6 +21,8 @@ public class Shotgun : MonoBehaviour
         }
 
         lastFireTime = Time.time;
+
+        shotgunAudio.Play();     // Play the shotgun sound effect
 
         // Spawn pellets
         for (int i = 0; i < pelletCount; i++)

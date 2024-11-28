@@ -11,7 +11,6 @@ public class playerShoot : MonoBehaviour
 
     [SerializeField] private KeyCode reloadKey; //The key that the user presses to reload the gun
 
-
     //A function that gets called every "update" or frame
     private void Update()
     {
@@ -26,7 +25,5 @@ public class playerShoot : MonoBehaviour
         {
             reloadInput?.Invoke();
         }
-                
-
     }
 }

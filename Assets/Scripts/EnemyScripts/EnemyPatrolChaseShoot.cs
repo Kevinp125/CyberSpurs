@@ -28,6 +28,8 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
     private enum EnemyState { Patrolling, Chasing, Shooting }
     private EnemyState currentState = EnemyState.Patrolling;
 
+    public AudioSource enemyGunAudio;
+
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -142,6 +144,7 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
     {
         if (projectilePrefab != null && shootPoint != null)
         {
+            enemyGunAudio.Play();     // Play the enemy shoot sound effect
             Instantiate(projectilePrefab, shootPoint.position, shootPoint.rotation);
         }
         else
