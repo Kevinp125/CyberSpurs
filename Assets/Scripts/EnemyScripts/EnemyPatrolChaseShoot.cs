@@ -20,6 +20,10 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
     [SerializeField] private float shootRange = 8f; // Range within which the enemy can shoot the player
     [SerializeField] private float fireRate = 1f; // Time between shots
 
+    [Header("Aggro Settings")]
+    [SerializeField] private float aggroRadius = 10f; // Radius to find nearby enemies when aggroed
+    private bool hasAggroed = false; // Ensure aggro only triggers once per damage event
+
     private NavMeshAgent agent;
     private int currentWaypointIndex = 0;
     private float waitTimer = 0;
@@ -98,6 +102,43 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
 
     }
 
+    public void TakeDamage()
+    {
+        // Aggro the enemy that was shot
+        if (!hasAggroed)
+        {
+            Debug.Log($"{gameObject.name} has been shot and is now chasing the player!");
+            ChasePlayer();
+            AggroNearbyEnemies(); // Notify nearby enemies to aggro
+            hasAggroed = true; // Ensure aggro happens only once
+        }
+    }
+
+    private void AggroNearbyEnemies()
+    {
+        // Find all colliders within the aggro radius
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, aggroRadius);
+
+        foreach (Collider nearbyCollider in hitColliders)
+        {
+            // Check for EnemyPatrol
+            EnemyPatrolChaseShoot nearbyEnemy = nearbyCollider.GetComponent<EnemyPatrolChaseShoot>();
+            if (nearbyEnemy != null && nearbyEnemy != this)
+            {
+                Debug.Log($"{nearbyEnemy.gameObject.name} (EnemyPatrol) is now chasing the player because of aggro!");
+                nearbyEnemy.ChasePlayer(); // Trigger the chase behavior for EnemyPatrol
+                continue; // Skip to the next collider to avoid duplicate checks
+            }
+
+            // Check for EnemyPatrolChaseScript
+            EnemyPatrol nearbyChaseEnemy = nearbyCollider.GetComponent<EnemyPatrol>();
+            if (nearbyChaseEnemy != null)
+            {
+                Debug.Log($"{nearbyChaseEnemy.gameObject.name} (EnemyPatrolChaseScript) is now chasing the player because of aggro!");
+                nearbyChaseEnemy.ChasePlayer(); // Trigger the chase behavior for EnemyPatrolChaseScript
+            }
+        }
+    }
     private void Patrol()
     {
         if (waypoints.Count == 0) return;
@@ -115,7 +156,7 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
         }
     }
 
-    private void ChasePlayer()
+    public void ChasePlayer()
     {
         agent.stoppingDistance = chaseStoppingDistance;
         agent.SetDestination(player.position);
