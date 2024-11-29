@@ -36,23 +36,11 @@ public class shadowTag : MonoBehaviour
             insideShadow = false;
         }
 
-        if (insideShadow == true)
-            AddOutline();
+        if(insideShadow == true)
+        {
+
+        }
+           
     }
 
-    public void AddOutline()
-    {
-        if (renderer != null && outlineMaterial != null)
-        {
-            renderer.material = outlineMaterial; // Switch to outline material
-        }
-    }
-
-    public void RemoveOutline()
-    {
-        if (renderer != null && originalMaterial != null)
-        {
-            renderer.material = originalMaterial; // Switch back to original material
-        }
-    }
 }
