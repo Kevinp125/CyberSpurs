@@ -8,6 +8,7 @@ public class enemyHealth : MonoBehaviour, IDamageable
     [SerializeField] private enemyStats enemyStats;
     [SerializeField] private Slider healthBarSlider;
     public PlayerBulletTime playerBulletTime; //getting a reference to our BulletTime script so we can call our OnEnemyKilled() fucnction
+    public PlayerStats playerStats; // Reference to PlayerStats script for tracking kills
 
     public float currentHealth;
 
@@ -28,6 +29,15 @@ public class enemyHealth : MonoBehaviour, IDamageable
     {
         if (currentHealth <= 0)
         {
+            if (playerStats != null)
+            {
+                playerStats.AddKill();
+            }
+            else
+            {
+                Debug.LogError("playerStats is null! Ensure it's assigned.");
+            }
+
             if (playerBulletTime != null)
             {
                 playerBulletTime.OnEnemyKilled();

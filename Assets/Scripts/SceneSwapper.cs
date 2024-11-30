@@ -1,17 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement; //dont forget me!
+using UnityEngine.SceneManagement; // Import Scene Management for loading scenes
 
 public class SceneSwapper : MonoBehaviour
 {
-#pragma warning disable 0649 //private variables
-    [SerializeField] private string sceneName;
-#pragma warning restore 0649
-    private void OnTriggerEnter(Collider collision)
+    [SerializeField] private string sceneToLoad; // Name of the scene to load
+
+    private void OnTriggerEnter(Collider other)
     {
-        playerController player = collision.gameObject.GetComponent<playerController>();
-        if (player)
-            SceneManager.LoadScene(sceneName);
+        // Check if the colliding object is the player
+        if (other.CompareTag("Player"))
+        {
+            Debug.Log($"Swapping to scene: {sceneToLoad}");
+            SceneManager.LoadScene(sceneToLoad); // Load the specified scene
+        }
     }
 }
