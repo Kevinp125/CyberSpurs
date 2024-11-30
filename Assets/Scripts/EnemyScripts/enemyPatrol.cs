@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class EnemyPatrol: MonoBehaviour
+public class EnemyPatrol : MonoBehaviour
 {
     [Header("Patrol Settings")]
     [SerializeField] private List<Transform> waypoints; // List of patrol waypoints
@@ -13,6 +13,10 @@ public class EnemyPatrol: MonoBehaviour
     [SerializeField] private Transform player; // Reference to the player's Transform
     [SerializeField] private float detectionRange = 10f; // Range within which the enemy will detect and chase the player
     [SerializeField] private float chaseStoppingDistance = 2f; // Stopping distance when chasing the player
+
+    [Header("Aggro Settings")]
+    [SerializeField] private float aggroRadius = 10f; // Radius to find nearby enemies when aggroed
+    private bool hasAggroed = false; // Ensure aggro only triggers once per damage event
 
     private NavMeshAgent agent;
     private int currentWaypointIndex = 0;
@@ -30,9 +34,6 @@ public class EnemyPatrol: MonoBehaviour
             agent.enabled = true;
         }
 
-        
-
-
         if (waypoints.Count > 0)
         {
             // Set initial patrol destination
@@ -46,25 +47,6 @@ public class EnemyPatrol: MonoBehaviour
 
     void Update()
     {
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(transform.position, out hit, 1.0f, NavMesh.AllAreas))
-        {
-            transform.position = hit.position; // Adjust the position to snap to NavMesh
-        }
-
-        if (distanceToPlayer <= detectionRange)
-        {
-            // Switch to chasing when the player is close
-            currentState = EnemyState.Chasing;
-        }
-        else
-        {
-            // Switch back to patrolling when the player is out of range
-            currentState = EnemyState.Patrolling;
-        }
-
         if (currentState == EnemyState.Patrolling)
         {
             Patrol();
@@ -73,16 +55,6 @@ public class EnemyPatrol: MonoBehaviour
         {
             ChasePlayer();
         }
-
-        if (agent.isOnNavMesh)
-        {
-            Debug.Log("Agent is on the NavMesh.");
-        }
-        else
-        {
-            Debug.LogError("Agent is NOT on the NavMesh.");
-        }
-
     }
 
     private void Patrol()
@@ -104,10 +76,49 @@ public class EnemyPatrol: MonoBehaviour
         }
     }
 
-    private void ChasePlayer()
+    public void ChasePlayer()
     {
+        currentState = EnemyState.Chasing; // Set the state to chasing
         agent.stoppingDistance = chaseStoppingDistance; // Set stopping distance for chasing
         agent.SetDestination(player.position); // Chase the player's position
+    }
+
+    public void TakeDamage()
+    {
+        // Aggro the enemy that was shot
+        if (!hasAggroed)
+        {
+            Debug.Log($"{gameObject.name} has been shot and is now chasing the player!");
+            ChasePlayer();
+            AggroNearbyEnemies(); // Notify nearby enemies to aggro
+            hasAggroed = true; // Ensure aggro happens only once
+        }
+    }
+
+    private void AggroNearbyEnemies()
+    {
+        // Find all colliders within the aggro radius
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, aggroRadius);
+
+        foreach (Collider nearbyCollider in hitColliders)
+        {
+            // Check for EnemyPatrol
+            EnemyPatrol nearbyEnemy = nearbyCollider.GetComponent<EnemyPatrol>();
+            if (nearbyEnemy != null && nearbyEnemy != this)
+            {
+                Debug.Log($"{nearbyEnemy.gameObject.name} (EnemyPatrol) is now chasing the player because of aggro!");
+                nearbyEnemy.ChasePlayer(); // Trigger the chase behavior for EnemyPatrol
+                continue; // Skip to the next collider to avoid duplicate checks
+            }
+
+            // Check for EnemyPatrolChaseScript
+            EnemyPatrolChaseShoot nearbyChaseEnemy = nearbyCollider.GetComponent<EnemyPatrolChaseShoot>();
+            if (nearbyChaseEnemy != null)
+            {
+                Debug.Log($"{nearbyChaseEnemy.gameObject.name} (EnemyPatrolChaseScript) is now chasing the player because of aggro!");
+                nearbyChaseEnemy.ChasePlayer(); // Trigger the chase behavior for EnemyPatrolChaseScript
+            }
+        }
     }
 
     private void OnDrawGizmosSelected()
@@ -115,5 +126,9 @@ public class EnemyPatrol: MonoBehaviour
         // Visualize the detection range in the Scene view
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
+
+        // Visualize the aggro radius in the Scene view
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, aggroRadius);
     }
 }

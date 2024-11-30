@@ -97,6 +97,20 @@ public class Gun : MonoBehaviour //A script that houses all the basic functions 
             {
                 IDamageable damageable = hitInfo.transform.GetComponent<IDamageable>(); //Gets the components from the "IDamageable" interface, which for now is just the "damage" function
                 damageable?.Damage(gunData.damage); //Calls the "damage" function with the gun's "damage" data as its only parameter
+
+                            // Check if the hit object is an EnemyPatrol (to trigger aggro)
+                EnemyPatrol enemy = hitInfo.transform.GetComponent<EnemyPatrol>();
+                if (enemy != null)
+                {
+                    enemy.TakeDamage(); // Trigger the aggro behavior
+                }
+
+                EnemyPatrolChaseShoot chaseShootEnemy = hitInfo.transform.GetComponent<EnemyPatrolChaseShoot>();
+                if (chaseShootEnemy != null)
+                {   
+                    chaseShootEnemy.TakeDamage(); // Trigger the aggro behavior for EnemyPatrolChaseShoot
+                }
+                
                 Debug.Log(hitInfo.transform.name);
             }
 

@@ -44,6 +44,7 @@ public class BossHealth : MonoBehaviour, IDamageable
 
     private List<GameObject> activeGuardDogs = new List<GameObject>();
     private BossState currentState = BossState.Patrolling;
+    public GameManager gameManager; // Reference to the GameManager
 
     private void Start()
     {
@@ -236,6 +237,15 @@ public class BossHealth : MonoBehaviour, IDamageable
         if (currentHealth <= 0)
         {
             Destroy(gameObject);
+            if (gameManager != null)
+            {
+                gameManager.DisplayEndStats();
+            }
+            else
+            {
+                Debug.LogError("GameManager reference is missing in BossHealth!");
+            }
+
         }
     }
 
