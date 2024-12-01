@@ -1,26 +1,26 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections.Generic;
 
 public class EnemyPatrol : MonoBehaviour
 {
     [Header("Patrol Settings")]
-    [SerializeField] private List<Transform> waypoints; // List of patrol waypoints
-    [SerializeField] private float waitTime = 2f; // Time to wait at each waypoint
-    [SerializeField] private float stoppingDistance = 0.2f; // How close the agent needs to be to consider it reached the waypoint
+    [SerializeField] private List<Transform> waypoints;
+    [SerializeField] private float waitTime = 2f;
+    [SerializeField] private float stoppingDistance = 0.2f;
 
     [Header("Chase Settings")]
-    [SerializeField] private Transform player; // Reference to the player's Transform
-    [SerializeField] private float detectionRange = 10f; // Range within which the enemy will detect and chase the player
-    [SerializeField] private float chaseStoppingDistance = 2f; // Stopping distance when chasing the player
+    [SerializeField] private float detectionRange = 10f;
+    [SerializeField] private float chaseStoppingDistance = 2f;
 
     [Header("Aggro Settings")]
-    [SerializeField] private float aggroRadius = 10f; // Radius to find nearby enemies when aggroed
-    private bool hasAggroed = false; // Ensure aggro only triggers once per damage event
+    [SerializeField] private float aggroRadius = 10f;
+    private bool hasAggroed = false;
 
     private NavMeshAgent agent;
     private int currentWaypointIndex = 0;
     private float waitTimer = 0;
+    private Transform player;
 
     private enum EnemyState { Patrolling, Chasing }
     private EnemyState currentState = EnemyState.Patrolling;
@@ -28,25 +28,12 @@ public class EnemyPatrol : MonoBehaviour
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        if (!agent.enabled) agent.enabled = true;
 
-        if (!agent.enabled)
-        {
-            agent.enabled = true;
-        }
-
-        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        if (playerObject != null)
-        {
-            player = playerObject.transform;
-        }
-        else
-        {
-            Debug.LogError("Player not found! Ensure the player has the 'Player' tag.");
-        }
+        FindPlayer();
 
         if (waypoints.Count > 0)
         {
-            // Set initial patrol destination
             agent.SetDestination(waypoints[currentWaypointIndex].position);
         }
         else
@@ -57,18 +44,15 @@ public class EnemyPatrol : MonoBehaviour
 
     void Update()
     {
+        if (player == null)
+        {
+            FindPlayer();
+            return; // Skip the rest of the update if the player is not found yet
+        }
+
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        if (distanceToPlayer <= detectionRange)
-        {
-            // Switch to chasing when the player is close
-            currentState = EnemyState.Chasing;
-        }
-        else
-        {
-            // Switch back to patrolling when the player is out of range
-            currentState = EnemyState.Patrolling;
-        }
+        currentState = (distanceToPlayer <= detectionRange) ? EnemyState.Chasing : EnemyState.Patrolling;
 
         if (currentState == EnemyState.Patrolling)
         {
@@ -80,19 +64,31 @@ public class EnemyPatrol : MonoBehaviour
         }
     }
 
+    private void FindPlayer()
+    {
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null)
+        {
+            player = playerObject.transform;
+        }
+        else
+        {
+            Debug.LogWarning("Player not found. Ensure the player has the 'Player' tag.");
+        }
+    }
+
     private void Patrol()
     {
         if (waypoints.Count == 0) return;
 
-        // Check if the agent is close enough to the current waypoint
         if (!agent.pathPending && agent.remainingDistance <= stoppingDistance)
         {
             waitTimer += Time.deltaTime;
 
-            // If the agent has waited long enough, move to the next waypoint
             if (waitTimer >= waitTime)
             {
-                currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Count;
+                currentWaypointIndex = Random.Range(0, waypoints.Count);
+
                 agent.SetDestination(waypoints[currentWaypointIndex].position);
                 waitTimer = 0;
             }
@@ -101,62 +97,42 @@ public class EnemyPatrol : MonoBehaviour
 
     public void ChasePlayer()
     {
-        currentState = EnemyState.Chasing; // Set the state to chasing
-        agent.stoppingDistance = chaseStoppingDistance; // Set stopping distance for chasing
         if (player != null)
         {
-            agent.SetDestination(player.position); // Chase the player's position
+            agent.stoppingDistance = chaseStoppingDistance;
+            agent.SetDestination(player.position);
         }
     }
 
     public void TakeDamage()
     {
-        // Aggro the enemy that was shot
         if (!hasAggroed)
         {
             Debug.Log($"{gameObject.name} has been shot and is now chasing the player!");
             ChasePlayer();
-            AggroNearbyEnemies(); // Notify nearby enemies to aggro
-            hasAggroed = true; // Ensure aggro happens only once
+            AggroNearbyEnemies();
+            hasAggroed = true;
         }
     }
 
     private void AggroNearbyEnemies()
     {
-        // Find all colliders within the aggro radius
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, aggroRadius);
-
         foreach (Collider nearbyCollider in hitColliders)
         {
-            // Check for EnemyPatrol
             EnemyPatrol nearbyEnemy = nearbyCollider.GetComponent<EnemyPatrol>();
             if (nearbyEnemy != null && nearbyEnemy != this)
             {
-                Debug.Log($"{nearbyEnemy.gameObject.name} (EnemyPatrol) is now chasing the player because of aggro!");
-                nearbyEnemy.ChasePlayer(); // Trigger the chase behavior for EnemyPatrol
-                continue; // Skip to the next collider to avoid duplicate checks
+                nearbyEnemy.ChasePlayer();
             }
-
-            // Check for EnemyPatrolChaseShoot
-            EnemyPatrolChaseShoot nearbyChaseEnemy = nearbyCollider.GetComponent<EnemyPatrolChaseShoot>();
-            // Check if the nearbyChaseEnemy has a ChasePlayer method
-            if (nearbyChaseEnemy != null && nearbyChaseEnemy != this)
-            {
-                Debug.Log($"{nearbyEnemy.gameObject.name} (EnemyPatrol) is now chasing the player because of aggro!");
-                nearbyChaseEnemy.ChasePlayer(); // Trigger the chase behavior for EnemyPatrol
-            }
-
-            
         }
     }
 
     private void OnDrawGizmosSelected()
     {
-        // Visualize the detection range in the Scene view
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 
-        // Visualize the aggro radius in the Scene view
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, aggroRadius);
     }
