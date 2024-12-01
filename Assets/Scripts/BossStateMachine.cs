@@ -48,11 +48,19 @@ public class BossHealth : MonoBehaviour, IDamageable
 
     private void Start()
     {
+        gameManager = FindObjectOfType<GameManager>();
+    
+        if (gameManager == null)
+        {   
+            Debug.LogError("GameManager not found! Ensure a GameManager exists and is set to DontDestroyOnLoad.");
+        }
+        
         currentHealth = enemyStats.maxHealth;
         SetHealthBarUI();
 
         navAgent = GetComponent<NavMeshAgent>();
         player = GameObject.FindWithTag("Player").transform; // Assuming player has a "Player" tag
+        playerBulletTime = GameObject.FindWithTag("Player")?.GetComponent<PlayerBulletTime>(); // Dynamically find PlayerBulletTime
     }
 
     private void Update()

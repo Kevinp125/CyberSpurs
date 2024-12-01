@@ -23,7 +23,18 @@ public class playerShoot : MonoBehaviour
         //An if statement that invokes the "reload" function whenever the user specified reload key is pressed
         if (Input.GetKeyDown(reloadKey))
         {
-            reloadInput?.Invoke();
+            Debug.Log("Reload key detected");
+            // reloadInput?.Invoke();
+            
+            if (reloadInput != null)
+            {
+                Debug.Log("Reload action is subscribed");
+                reloadInput.Invoke();
+            }
+            else
+            {
+                Debug.LogError("No subscribers for reloadInput!");
+            }
         }
     }
 }

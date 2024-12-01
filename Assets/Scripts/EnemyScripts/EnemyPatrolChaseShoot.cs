@@ -43,6 +43,16 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
             agent.enabled = true;
         }
 
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null)
+        {
+            player = playerObject.transform;
+        }
+        else
+        {
+            Debug.LogError("Player not found! Ensure the player has the 'Player' tag.");
+        }
+
         if (waypoints.Count > 0)
         {
             agent.SetDestination(waypoints[currentWaypointIndex].position);

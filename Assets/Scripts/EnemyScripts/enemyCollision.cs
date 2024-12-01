@@ -11,7 +11,7 @@ public class enemyCollision : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-            playerStats = FindObjectOfType<PlayerStats>();
+        playerStats = FindObjectOfType<PlayerStats>();
         if (playerStats == null)
         {
             Debug.LogError("PlayerStats not found in the scene! Ensure the Player GameObject has the PlayerStats script.");
