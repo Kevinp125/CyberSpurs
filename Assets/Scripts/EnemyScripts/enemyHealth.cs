@@ -16,6 +16,24 @@ public class enemyHealth : MonoBehaviour, IDamageable
     {
         currentHealth = enemyStats.maxHealth;
         SetHealhBarUI();
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            playerBulletTime = player.GetComponent<PlayerBulletTime>();
+            playerStats = player.GetComponent<PlayerStats>();
+        }
+
+        // Log errors if references are not found
+        if (playerBulletTime == null)
+        {
+            Debug.LogError("PlayerBulletTime script not found on the Player! Ensure it's attached.");
+        }
+
+        if (playerStats == null)
+        {
+            Debug.LogError("PlayerStats script not found on the Player! Ensure it's attached.");
+        }
     }
 
     public void Damage(float damage)

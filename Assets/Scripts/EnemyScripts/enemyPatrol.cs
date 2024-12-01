@@ -34,6 +34,16 @@ public class EnemyPatrol : MonoBehaviour
             agent.enabled = true;
         }
 
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null)
+        {
+            player = playerObject.transform;
+        }
+        else
+        {
+            Debug.LogError("Player not found! Ensure the player has the 'Player' tag.");
+        }
+
         if (waypoints.Count > 0)
         {
             // Set initial patrol destination
@@ -47,6 +57,19 @@ public class EnemyPatrol : MonoBehaviour
 
     void Update()
     {
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+
+        if (distanceToPlayer <= detectionRange)
+        {
+            // Switch to chasing when the player is close
+            currentState = EnemyState.Chasing;
+        }
+        else
+        {
+            // Switch back to patrolling when the player is out of range
+            currentState = EnemyState.Patrolling;
+        }
+
         if (currentState == EnemyState.Patrolling)
         {
             Patrol();
@@ -80,7 +103,10 @@ public class EnemyPatrol : MonoBehaviour
     {
         currentState = EnemyState.Chasing; // Set the state to chasing
         agent.stoppingDistance = chaseStoppingDistance; // Set stopping distance for chasing
-        agent.SetDestination(player.position); // Chase the player's position
+        if (player != null)
+        {
+            agent.SetDestination(player.position); // Chase the player's position
+        }
     }
 
     public void TakeDamage()
@@ -111,13 +137,16 @@ public class EnemyPatrol : MonoBehaviour
                 continue; // Skip to the next collider to avoid duplicate checks
             }
 
-            // Check for EnemyPatrolChaseScript
+            // Check for EnemyPatrolChaseShoot
             EnemyPatrolChaseShoot nearbyChaseEnemy = nearbyCollider.GetComponent<EnemyPatrolChaseShoot>();
-            if (nearbyChaseEnemy != null)
+            // Check if the nearbyChaseEnemy has a ChasePlayer method
+            if (nearbyChaseEnemy != null && nearbyChaseEnemy != this)
             {
-                Debug.Log($"{nearbyChaseEnemy.gameObject.name} (EnemyPatrolChaseScript) is now chasing the player because of aggro!");
-                nearbyChaseEnemy.ChasePlayer(); // Trigger the chase behavior for EnemyPatrolChaseScript
+                Debug.Log($"{nearbyEnemy.gameObject.name} (EnemyPatrol) is now chasing the player because of aggro!");
+                nearbyChaseEnemy.ChasePlayer(); // Trigger the chase behavior for EnemyPatrol
             }
+
+            
         }
     }
 
