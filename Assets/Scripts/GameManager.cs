@@ -1,15 +1,16 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
     [Header("References")]
     public PlayerStats playerStats; // Reference to PlayerStats for stats
     public GameObject endStatsPanel; // The UI panel to display stats
-    public Text starsEarnedText; // Text to display the number of stars earned
-    public Text enemiesKilledText; // Text to display enemies killed
-    public Text damageTakenText; // Text to display damage taken
+    public TMP_Text starsEarnedText; // Text to display the number of stars earned
+    public TMP_Text enemiesKilledText; // Text to display enemies killed
+    public TMP_Text damageTakenText; // Text to display damage taken
 
     private int starsEarned = 0;
 
@@ -75,12 +76,12 @@ public class GameManager : MonoBehaviour
         CalculateStars();
 
         // Activate the stats panel
-        // endStatsPanel.SetActive(true);
+        endStatsPanel.SetActive(true);
 
         // Update stats and stars text
-        // enemiesKilledText.text = $"Enemies Killed: {playerStats.EnemiesKilled}";
-        // damageTakenText.text = $"Damage Taken: {(playerStats.TookDamage ? "Yes" : "No")}";
-        // starsEarnedText.text = $"Stars Earned: {starsEarned} / 3";
+        enemiesKilledText.text = $"Enemies Killed: {playerStats.EnemiesKilled}";
+        damageTakenText.text = $"Damage Taken: {(playerStats.TookDamage ? "Yes" : "No")}";
+        starsEarnedText.text = $"Stars Earned: {starsEarned} / 3";
 
         Debug.Log($"Enemies Killed: {playerStats.EnemiesKilled}");
         Debug.Log($"Damage Taken: {(playerStats.TookDamage ? "Yes" : "No")}");

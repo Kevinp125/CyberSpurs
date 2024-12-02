@@ -34,9 +34,12 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
 
     public AudioSource enemyGunAudio;
 
+    public Animator tigerAnimator;
+
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        tigerAnimator.SetBool("isWalking", true);
 
         if (!agent.enabled)
         {
@@ -61,6 +64,7 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
         {
             Debug.LogWarning("No waypoints set for patrol.");
         }
+        
     }
 
     void Update()

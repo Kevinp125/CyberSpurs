@@ -34,6 +34,8 @@ public class PlayerBulletTime : MonoBehaviour
     public Sprite kadeVisible;  // Kade's visible sprite portrait asset
     public Sprite kadeHidden;   // Kade's hidden sprite portrait asset
 
+    public GameObject bulletTimeOverlay;
+
     void Update()
     {
         // Check if the player presses "B" and the bullet time meter is full
@@ -161,6 +163,7 @@ public class PlayerBulletTime : MonoBehaviour
     void ActivateBulletTime()
     {
         isBulletTimeActive = true;
+        bulletTimeOverlay.SetActive(true);
         Time.timeScale = bulletTimeScale;  // Slow down time to 20%
         StartCoroutine(DeactivateBulletTimeAfterDelay());  // Start coroutine to deactivate after a delay
     }
@@ -169,6 +172,7 @@ public class PlayerBulletTime : MonoBehaviour
     IEnumerator DeactivateBulletTimeAfterDelay()
     {
         yield return new WaitForSecondsRealtime(bulletTimeDuration);  // Wait for real-time duration
+        bulletTimeOverlay.SetActive(false);
         Time.timeScale = 1f;  // Reset time scale to normal speed
         isBulletTimeActive = false;  // Bullet time is no longer active
         bulletTimeMeter = 0f;  // Reset the bullet time meter after use
