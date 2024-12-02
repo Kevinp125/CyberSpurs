@@ -1,107 +1,110 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class playerController : MonoBehaviour
 {
-    //SerializeField tag just allows variable that we arwe declaring to show up as a property in unity and can be edited directly through Unity without having to reopen the script a thousand times
+    [SerializeField] Transform playerCamera;  
+    [SerializeField][Range(0.0f, 0.5f)] float mouseSmoothTime = 0.03f;  
+    [SerializeField] bool cursorLock = true;  
+    [SerializeField] float mouseSensitivity = 3.5f;  
+    [SerializeField] float Speed = 6.0f;  
+    [SerializeField][Range(0.0f, 0.5f)] float moveSmoothTime = 0.3f;  
+    [SerializeField] float gravity = -30f;  
+    [SerializeField] Transform groundCheck;  
+    [SerializeField] LayerMask ground;  
 
-    [SerializeField] Transform playerCamera;  //Transform is a property in Unity that refers to position, rotation and scale, of a GameObject. Every GameObject has a Tranform component all we are doing here is saying that playerCamera is going to point to a transform component.
+    public float jumpHeight = 6f;  
+    public float velocityY;  
+    public bool isGrounded;  
 
-    [SerializeField][Range(0.0f, 0.5f)] float mouseSmoothTime = 0.03f;  // Controls how smoothly the mouse movement is applied. The Range also allows for a slider in our input box back in Unity from the range of 0.0f to 0.5f 
+    float cameraCap;  
+    Vector2 currentMouseDelta;  
+    Vector2 currentMouseDeltaVelocity;  
 
-    [SerializeField] bool cursorLock = true;  // Whether the cursor should be locked in the middle of the screen (FPS games typically do this).
-    [SerializeField] float mouseSensitivity = 3.5f;  // How sensitive the mouse movement is for looking around.
-    [SerializeField] float Speed = 6.0f;  // Movement speed of the player.
-    [SerializeField][Range(0.0f, 0.5f)] float moveSmoothTime = 0.3f;  // Controls how smoothly the player's movement changes direction.
-    [SerializeField] float gravity = -30f;  // The strength of gravity applied to the player.
-    [SerializeField] Transform groundCheck;  // groundCheck is a Transform variable meaning it also will refer to the positon, rotation and scale, of the GameObject we place here 
-    [SerializeField] LayerMask ground;  // LayerMask variable created that will allow in the inspector to choopse which layers are considered "ground"
+    CharacterController controller;  
+    Vector2 currentDir;  
+    Vector2 currentDirVelocity;  
+    Vector3 velocity;  
 
-    public float jumpHeight = 6f;  // How high the player can jump.
-    public float velocityY;  // Tracks the player's vertical velocity (for jumping and falling).
-    public bool isGrounded;  // Whether the player is currently on the ground.
+    private EventSystem eventSystem;  // Reference to EventSystem
 
-    float cameraCap;  // This prevents the camera from looking too far up or down.
-    Vector2 currentMouseDelta;  // Tracks the current movement of the mouse.
-    Vector2 currentMouseDeltaVelocity;  // Tracks the velocity of mouse smoothing for a smoother camera movement.
-    
-    CharacterController controller;  // Reference to the CharacterController component, which handles player movement and collision.
-    Vector2 currentDir;  // The current direction the player is moving in (x and z axes).
-    Vector2 currentDirVelocity;  // Velocity of movement smoothing.
-    Vector3 velocity;  // The total velocity applied to the player (x, y, z).
-    // Start is called before the first frame update
     void Start()
     {
-        controller = GetComponent<CharacterController>();  // Gets a reference to the CharacterController component attached to the player.
+        controller = GetComponent<CharacterController>();  
 
         if (cursorLock)
         {
-            Cursor.lockState = CursorLockMode.Locked;  // Locks the cursor to the center of the screen so the player can look around without the cursor leaving the game window.
-            Cursor.visible = true;  // Makes the cursor visible if it is locked in the center of the screeen though the line before takes precedence and it wont be visible
+            Cursor.lockState = CursorLockMode.Locked;  
+            Cursor.visible = true;  
         }
-        
+
+        // Dynamically find the EventSystem
+        eventSystem = FindObjectOfType<EventSystem>();
+        if (eventSystem == null)
+        {
+            Debug.LogError("No EventSystem found in the scene! Please ensure one exists.");
+        }
     }
 
-    // Update is called once per frame
     void Update()
     {
-        UpdateMouse();  // Calls the function to handle mouse movement (camera looking around).
-        UpdateMove();   // Calls the function to handle player movement (walking, jumping, etc.).
+        // Check if the EventSystem is active and the pointer is over a UI element
+        if (eventSystem != null && eventSystem.IsPointerOverGameObject())
+        {
+            return; // Skip player input if interacting with UI
+        }
+
+        UpdateMouse();  
+        UpdateMove();   
     }
 
     void UpdateMouse()
     {
-        Vector2 targetMouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")); //Input.GetAxis are unitys built in functions that read player mouse movement
+        Vector2 targetMouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")); 
 
-        currentMouseDelta = Vector2.SmoothDamp(currentMouseDelta, targetMouseDelta, ref currentMouseDeltaVelocity, mouseSmoothTime);  // Smooths the mouse movement over time.
+        currentMouseDelta = Vector2.SmoothDamp(currentMouseDelta, targetMouseDelta, ref currentMouseDeltaVelocity, mouseSmoothTime);  
 
-        cameraCap -= currentMouseDelta.y * mouseSensitivity;  // Adjusts the camera's vertical rotation based on mouse movement.
-        cameraCap = Mathf.Clamp(cameraCap, -90.0f, 90.0f);  // Limits the vertical camera rotation to prevent the player from looking too far up or down.
+        cameraCap -= currentMouseDelta.y * mouseSensitivity;  
+        cameraCap = Mathf.Clamp(cameraCap, -90.0f, 90.0f);  
 
-        playerCamera.localEulerAngles = Vector3.right * cameraCap;  // Rotates the camera based on the vertical mouse movement.
-        transform.Rotate(Vector3.up * currentMouseDelta.x * mouseSensitivity);  // Rotates the player based on horizontal mouse movement.
+        playerCamera.localEulerAngles = Vector3.right * cameraCap;  
+        transform.Rotate(Vector3.up * currentMouseDelta.x * mouseSensitivity);  
     }
 
     void UpdateMove()
     {
-        isGrounded = Physics.CheckSphere(groundCheck.position, 0.5f, ground);  // Checks if the player is on the ground by creating a small sphere at the ground check position.
+        isGrounded = Physics.CheckSphere(groundCheck.position, 0.5f, ground);  
 
-        Vector2 targetDir = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));  // Reads raw input for horizontal (A/D or Left/Right) and vertical (W/S or Up/Down) movement.
-        targetDir.Normalize();  // Ensures movement input has a consistent magnitude.
+        Vector2 targetDir = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));  
+        targetDir.Normalize();  
 
-        currentDir = Vector2.SmoothDamp(currentDir, targetDir, ref currentDirVelocity, moveSmoothTime);  // Smooths out player movement direction changes.
+        currentDir = Vector2.SmoothDamp(currentDir, targetDir, ref currentDirVelocity, moveSmoothTime);  
 
-        Vector3 velocity = (transform.forward * currentDir.y + transform.right * currentDir.x) * Speed + Vector3.up * velocityY;  // Combines movement and gravity to create the total velocity.
+        Vector3 velocity = (transform.forward * currentDir.y + transform.right * currentDir.x) * Speed + Vector3.up * velocityY;  
 
-        controller.Move(velocity * Time.deltaTime);  // Moves the player using the CharacterController, accounting for the calculated velocity.
+        controller.Move(velocity * Time.deltaTime);  
 
-
-        if(isGrounded) //Checks if the player is touching the ground
+        if (isGrounded)
         {
-           if(velocityY < 0) //Checks if the player has a negative y velocity (AKA if the player fell before they hit the ground)
-           {
-                velocityY = 0; //If the player's y velocity is negative while grounded, it will turn to 0
-           }
-
-            if(Input.GetButtonDown("Jump"))//Checks if the player presses the jump button
+            if (velocityY < 0)
             {
-                velocityY = Mathf.Sqrt(jumpHeight * -2f * gravity);  // Calculates the jump velocity using physics (gravity and jump height).
+                velocityY = 0;
+            }
+
+            if (Input.GetButtonDown("Jump"))
+            {
+                velocityY = Mathf.Sqrt(jumpHeight * -2f * gravity);  
             }
         }
 
-
-        if (!isGrounded ) //Checks if the player is not touching the ground
+        if (!isGrounded)
         {
-            velocityY += gravity * 2f * Time.deltaTime;  // Applies gravity to the vertical velocity (pulling the player down) while player is not touching the ground
+            velocityY += gravity * 2f * Time.deltaTime;  
 
-            if(controller.velocity.y < -20f) // If the player is falling (not grounded and falling fast), reset the velocityY to a default falling value.
+            if (controller.velocity.y < -20f)
             {
-                velocityY = -20f; //The maximum falling velocity a player can reach
+                velocityY = -20f; 
             }
-            
         }
     }
-
-
 }
