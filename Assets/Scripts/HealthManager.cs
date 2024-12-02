@@ -15,8 +15,11 @@ public class HealthManager : MonoBehaviour
     public static bool isInvincible;
 
     public Slider healthBarSlider;
-    public Text gameOverText;
     public KeyCode respawnKey;
+
+    public GameObject lowHealthOverlay;
+    public AudioSource hurtAudio;
+    public GameObject gameOverPanel;
 
     private void Awake()
     {
@@ -47,17 +50,16 @@ public class HealthManager : MonoBehaviour
 
         if (isGameOver)
         {
-            gameOverText.text = "GAMEOVER";
             Time.timeScale = 0;
+            gameOverPanel.SetActive(true);
 
             if(Input.GetKeyDown(respawnKey))
             {
                 isGameOver = false;
                 Instance.BecomeTemporarilyInvincible();
-                gameOverText.text = "";
                 Time.timeScale = 1;
                 playerHP = maxHP;
-                
+                gameOverPanel.SetActive(false);
             }
         }
     }
@@ -107,7 +109,7 @@ public class HealthManager : MonoBehaviour
 
     private IEnumerator BecomeTemporarilyInvincible()
     {
-        
+        hurtAudio.Play();
         isInvincible = true;
 
         yield return new WaitForSeconds(invincibilitySeconds);
@@ -119,6 +121,12 @@ public class HealthManager : MonoBehaviour
     private void SetHealhBarUI()
     {
         healthBarSlider.value = CalculateHealthPercentage();
+        if (healthBarSlider.value < 21) {
+            lowHealthOverlay.SetActive(true);
+        }
+        else {
+            lowHealthOverlay.SetActive(false);
+        }
     }
 
     private float CalculateHealthPercentage()
