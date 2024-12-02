@@ -44,7 +44,7 @@ public class BossHealth : MonoBehaviour, IDamageable
 
     private List<GameObject> activeGuardDogs = new List<GameObject>();
     private BossState currentState = BossState.Patrolling;
-    public GameManager gameManager; // Reference to the GameManager
+    private GameManager gameManager; // Reference to the GameManager
 
     private void Start()
     {
@@ -59,12 +59,14 @@ public class BossHealth : MonoBehaviour, IDamageable
         SetHealthBarUI();
 
         navAgent = GetComponent<NavMeshAgent>();
-        player = GameObject.FindWithTag("Player").transform; // Assuming player has a "Player" tag
-        playerBulletTime = GameObject.FindWithTag("Player")?.GetComponent<PlayerBulletTime>(); // Dynamically find PlayerBulletTime
+        player = GameObject.FindWithTag("Player")?.transform; // Assuming player has a "Player" tag
+        playerBulletTime = player?.GetComponent<PlayerBulletTime>(); // Dynamically find PlayerBulletTime
     }
 
     private void Update()
     {
+        if (player == null) return;
+
         switch (currentState)
         {
             case BossState.Patrolling:
@@ -166,27 +168,33 @@ public class BossHealth : MonoBehaviour, IDamageable
         return false;
     }
 
-    public void Damage(float damage)
+   public void Damage(float damage)
+{
+    if (!isPhaseTwo || isVulnerable)
     {
-        if (!isPhaseTwo || isVulnerable)
+        currentHealth -= damage;
+
+        if (playerBulletTime != null)
         {
-            currentHealth -= damage;
-
-            if (playerBulletTime != null)
-            {
-                playerBulletTime.IncreaseBulletTime(bulletTimeIncreasePercent);
-            }
-
-            SetHealthBarUI();
-            CheckIfPhaseTwo();
-            CheckIfDead();
+            playerBulletTime.IncreaseBulletTime(bulletTimeIncreasePercent);
         }
-        else
+
+        SetHealthBarUI();
+        CheckIfPhaseTwo();
+        CheckIfDead();
+
+        // Switch to chasing state upon taking damage
+        if (currentState != BossState.PhaseTwo) // Ensure this doesn't interfere with PhaseTwo behavior
         {
-            Debug.Log("Boss is invulnerable while guard dogs are active!");
+            currentState = BossState.Chasing;
+            Debug.Log("Boss took damage and is now chasing the player!");
         }
     }
-
+    else
+    {
+        Debug.Log("Boss is invulnerable while guard dogs are active!");
+    }
+}
     private void CheckIfPhaseTwo()
     {
         if (!isPhaseTwo && currentHealth <= enemyStats.maxHealth / 2)
@@ -244,7 +252,9 @@ public class BossHealth : MonoBehaviour, IDamageable
     {
         if (currentHealth <= 0)
         {
-            Destroy(gameObject);
+            Debug.Log("Boss is dead! Attempting to display end stats.");
+
+            // Ensure gameManager reference is valid before displaying stats
             if (gameManager != null)
             {
                 gameManager.DisplayEndStats();
@@ -254,6 +264,7 @@ public class BossHealth : MonoBehaviour, IDamageable
                 Debug.LogError("GameManager reference is missing in BossHealth!");
             }
 
+            Destroy(gameObject);
         }
     }
 

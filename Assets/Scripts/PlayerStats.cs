@@ -5,6 +5,11 @@ public class PlayerStats : MonoBehaviour
     public int EnemiesKilled { get; private set; }
     public bool TookDamage { get; private set; }
 
+    public void ResetStats()
+    {
+        EnemiesKilled = 0;
+        TookDamage = false;
+    }
     public void AddKill()
     {
         EnemiesKilled++;

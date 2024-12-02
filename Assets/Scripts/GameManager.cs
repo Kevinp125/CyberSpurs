@@ -12,6 +12,8 @@ public class GameManager : MonoBehaviour
     public TMP_Text enemiesKilledText; // Text to display enemies killed
     public TMP_Text damageTakenText; // Text to display damage taken
 
+    public playerController playerController; // Reference to PlayerController
+    public playerShoot playerShoot; // Reference to PlayerShoot
     private int starsEarned = 0;
 
     private static GameManager instance; // Singleton instance
@@ -32,8 +34,8 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // Dynamically find the PlayerStats component on the player
-        ReassignPlayerStats();
+        // Dynamically find the PlayerStats, PlayerController, and PlayerShoot components on the player
+        ReassignPlayerReferences();
 
         // Subscribe to the scene loaded event
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -47,20 +49,34 @@ public class GameManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Reassign the PlayerStats reference whenever a new scene is loaded
-        ReassignPlayerStats();
+        // Reassign references whenever a new scene is loaded
+        ReassignPlayerReferences();
     }
 
-    private void ReassignPlayerStats()
+    private void ReassignPlayerReferences()
     {
-        // Find the player object and get its PlayerStats component
         GameObject player = GameObject.FindWithTag("Player");
         if (player != null)
         {
+            // Reassign PlayerStats
             playerStats = player.GetComponent<PlayerStats>();
             if (playerStats == null)
             {
                 Debug.LogError("PlayerStats component not found on Player GameObject!");
+            }
+
+            // Reassign PlayerController
+            playerController = player.GetComponent<playerController>();
+            if (playerController == null)
+            {
+                Debug.LogError("playerController component not found on Player GameObject!");
+            }
+
+            // Reassign PlayerShoot
+            playerShoot = player.GetComponent<playerShoot>();
+            if (playerShoot == null)
+            {
+                Debug.LogError("playerShoot component not found on Player GameObject!");
             }
         }
         else
@@ -69,19 +85,61 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Method to calculate and display stats at the end of the level
+    public void RestartGame()
+    {
+        Debug.Log("Restart button clicked!"); // Debug log to confirm the button is clicked.
+        // Reset player stats if the reference is valid
+        if (playerStats != null)
+        {
+            playerStats.ResetStats();
+        }
+
+        // Reload Level 1
+        SceneManager.LoadScene("Daniel_KeyScene");
+
+        endStatsPanel.SetActive(false);
+
+        // Reset cursor state
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+
+        HealthManager.Regen(100);
+
+        playerController.enabled = true;
+        playerShoot.enabled = true;
+        
+    }
+
     public void DisplayEndStats()
     {
+        Debug.Log("DisplayEndStats called.");
+
         // Calculate stars
         CalculateStars();
 
         // Activate the stats panel
         endStatsPanel.SetActive(true);
 
+        // Enable the cursor for UI interaction
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+
+        // Disable player controls
+        if (playerController != null)
+        {
+            playerController.enabled = false;
+        }
+
+        // Disable player shooting
+        if (playerShoot != null)
+        {
+            playerShoot.enabled = false;
+        }
+
         // Update stats and stars text
-        enemiesKilledText.text = $"Enemies Killed: {playerStats.EnemiesKilled}";
-        damageTakenText.text = $"Damage Taken: {(playerStats.TookDamage ? "Yes" : "No")}";
-        starsEarnedText.text = $"Stars Earned: {starsEarned} / 3";
+        enemiesKilledText.text = $" {playerStats.EnemiesKilled}";
+        damageTakenText.text = $" {(playerStats.TookDamage ? "Yes" : "No")}";
+        starsEarnedText.text = $" {starsEarned} / 3";
 
         Debug.Log($"Enemies Killed: {playerStats.EnemiesKilled}");
         Debug.Log($"Damage Taken: {(playerStats.TookDamage ? "Yes" : "No")}");
@@ -93,6 +151,11 @@ public class GameManager : MonoBehaviour
         // Reset stars
         starsEarned = 0;
 
+        if (playerStats == null)
+        {
+            Debug.LogError("PlayerStats is null! Cannot display end stats.");
+            return;
+        }
         // Award stars based on kills
         if (playerStats.EnemiesKilled >= 20) starsEarned = 1;
         if (playerStats.EnemiesKilled >= 30) starsEarned = 2;

@@ -29,17 +29,18 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
     private float waitTimer = 0;
     private float shootTimer = 0;
 
+    [Header("Animation Settings")]
+    [SerializeField] private Animator enemyAnimator; // Reference to the Animator
+    private static readonly int IsWalking = Animator.StringToHash("isWalking");
+
     private enum EnemyState { Patrolling, Chasing, Shooting }
     private EnemyState currentState = EnemyState.Patrolling;
 
     public AudioSource enemyGunAudio;
 
-    public Animator tigerAnimator;
-
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        tigerAnimator.SetBool("isWalking", true);
 
         if (!agent.enabled)
         {
@@ -64,18 +65,17 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
         {
             Debug.LogWarning("No waypoints set for patrol.");
         }
-        
     }
 
     void Update()
     {
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(transform.position, out hit, 1.0f, NavMesh.AllAreas))
+        if (!agent.isOnNavMesh)
         {
-            transform.position = hit.position; // Adjust the position to snap to NavMesh
+            Debug.LogError("Agent is NOT on the NavMesh.");
+            return;
         }
+
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
         // Determine state based on player's distance
         if (distanceToPlayer <= shootRange)
@@ -88,7 +88,14 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
         }
         else
         {
-            currentState = EnemyState.Patrolling;
+            // Return to patrolling when the player is out of detection range
+            if (currentState != EnemyState.Patrolling)
+            {
+                Debug.Log($"{gameObject.name} is returning to patrol.");
+                hasAggroed = false; // Reset aggro state
+                currentState = EnemyState.Patrolling;
+                ResetAgentForPatrol();
+            }
         }
 
         // Execute behavior based on the current state
@@ -105,15 +112,25 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
                 break;
         }
 
-        if (agent.isOnNavMesh)
-        {
-            Debug.Log("Agent is on the NavMesh.");
-        }
-        else
-        {
-            Debug.LogError("Agent is NOT on the NavMesh.");
-        }
+        UpdateAnimation(); // Update animation based on movement
+    }
 
+    private void UpdateAnimation()
+    {
+        if (enemyAnimator != null)
+        {
+            bool isWalking = agent.velocity.magnitude > 0.1f; // Check if the enemy is moving
+            enemyAnimator.SetBool(IsWalking, isWalking);
+        }
+    }
+
+    private void ResetAgentForPatrol()
+    {
+        agent.stoppingDistance = patrolStoppingDistance;
+        if (waypoints.Count > 0)
+        {
+            agent.SetDestination(waypoints[currentWaypointIndex].position);
+        }
     }
 
     public void TakeDamage()
@@ -130,29 +147,20 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
 
     private void AggroNearbyEnemies()
     {
-        // Find all colliders within the aggro radius
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, aggroRadius);
 
         foreach (Collider nearbyCollider in hitColliders)
         {
-            // Check for EnemyPatrol
             EnemyPatrolChaseShoot nearbyEnemy = nearbyCollider.GetComponent<EnemyPatrolChaseShoot>();
             if (nearbyEnemy != null && nearbyEnemy != this)
             {
-                Debug.Log($"{nearbyEnemy.gameObject.name} (EnemyPatrol) is now chasing the player because of aggro!");
-                nearbyEnemy.ChasePlayer(); // Trigger the chase behavior for EnemyPatrol
-                continue; // Skip to the next collider to avoid duplicate checks
-            }
-
-            // Check for EnemyPatrolChaseScript
-            EnemyPatrol nearbyChaseEnemy = nearbyCollider.GetComponent<EnemyPatrol>();
-            if (nearbyChaseEnemy != null)
-            {
-                Debug.Log($"{nearbyChaseEnemy.gameObject.name} (EnemyPatrolChaseScript) is now chasing the player because of aggro!");
-                nearbyChaseEnemy.ChasePlayer(); // Trigger the chase behavior for EnemyPatrolChaseScript
+                Debug.Log($"{nearbyEnemy.gameObject.name} is now chasing the player due to aggro.");
+                nearbyEnemy.ChasePlayer();
+                continue;
             }
         }
     }
+
     private void Patrol()
     {
         if (waypoints.Count == 0) return;
@@ -178,15 +186,13 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
 
     private void ShootPlayer()
     {
-        agent.stoppingDistance = shootRange; // Keep the enemy at a shooting distance
+        agent.stoppingDistance = shootRange;
         agent.SetDestination(player.position);
 
-        // Rotate toward the player
         Vector3 directionToPlayer = (player.position - transform.position).normalized;
         Quaternion lookRotation = Quaternion.LookRotation(new Vector3(directionToPlayer.x, 0, directionToPlayer.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
 
-        // Handle shooting cooldown
         shootTimer += Time.deltaTime;
         if (shootTimer >= fireRate)
         {
@@ -199,7 +205,7 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
     {
         if (projectilePrefab != null && shootPoint != null)
         {
-            enemyGunAudio.Play();     // Play the enemy shoot sound effect
+            enemyGunAudio.Play();
             Instantiate(projectilePrefab, shootPoint.position, shootPoint.rotation);
         }
         else
@@ -210,7 +216,6 @@ public class EnemyPatrolChaseShoot : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        // Visualize the detection and shooting ranges in the Scene view
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 

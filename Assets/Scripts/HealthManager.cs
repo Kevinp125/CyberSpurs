@@ -7,7 +7,7 @@ public class HealthManager : MonoBehaviour
 {
     public static HealthManager Instance { get; private set; }
 
-    private static int playerHP;
+    public static int playerHP;
     public int maxHP;
     public int invincibilitySeconds;
 
@@ -53,25 +53,19 @@ public class HealthManager : MonoBehaviour
             Time.timeScale = 0;
             gameOverPanel.SetActive(true);
 
-            if(Input.GetKeyDown(respawnKey))
+            if (Input.GetKeyDown(respawnKey))
             {
-                isGameOver = false;
-                Instance.BecomeTemporarilyInvincible();
-                Time.timeScale = 1;
-                playerHP = maxHP;
-                gameOverPanel.SetActive(false);
+                RespawnPlayer();
             }
         }
     }
 
     public static void Damage(int damageAmount)
     {
-        
-        if(isInvincible)
+        if (isInvincible)
         {
             return;
         }
-
         else
         {
             playerHP -= damageAmount;
@@ -83,28 +77,19 @@ public class HealthManager : MonoBehaviour
 
             Instance.StartCoroutine(Instance.BecomeTemporarilyInvincible());
         }
-
     }
 
     public static void Regen(int regenAmount)
     {
-        if(playerHP < Instance.maxHP)
+        if (playerHP < Instance.maxHP)
         {
             playerHP += regenAmount;
 
-            if(playerHP > Instance.maxHP)
+            if (playerHP > Instance.maxHP)
             {
                 playerHP = Instance.maxHP;
             }
         }
-
-        else
-        {
-            return;
-        }
-
-
-        
     }
 
     private IEnumerator BecomeTemporarilyInvincible()
@@ -115,16 +100,17 @@ public class HealthManager : MonoBehaviour
         yield return new WaitForSeconds(invincibilitySeconds);
 
         isInvincible = false;
-
     }
 
     private void SetHealhBarUI()
     {
         healthBarSlider.value = CalculateHealthPercentage();
-        if (healthBarSlider.value < 21) {
+        if (healthBarSlider.value < 21)
+        {
             lowHealthOverlay.SetActive(true);
         }
-        else {
+        else
+        {
             lowHealthOverlay.SetActive(false);
         }
     }
@@ -133,4 +119,75 @@ public class HealthManager : MonoBehaviour
     {
         return ((float)playerHP / (float)maxHP) * 100;
     }
+
+private void RespawnPlayer()
+{
+    isGameOver = false;
+    Time.timeScale = 1;
+    playerHP = maxHP;
+
+    // Reset UI
+    gameOverPanel.SetActive(false);
+    SetHealhBarUI();
+
+    // Find the spawn point dynamically in the current scene
+    GameObject spawnPoint = GameObject.FindGameObjectWithTag("SpawnPoint");
+    Debug.Log($"Spawn Point Found: {spawnPoint != null}");
+
+    if (spawnPoint != null)
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        Debug.Log($"Player Found: {player != null}");
+        
+        if (player != null)
+        {
+            // Reset Rigidbody
+            Rigidbody rb = player.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.isKinematic = true;
+                rb.position = spawnPoint.transform.position; // Update Rigidbody position
+                rb.rotation = Quaternion.identity; // Reset rotation if needed
+                rb.isKinematic = false;
+            }
+
+
+            // Reset CharacterController or Collider
+            CharacterController controller = player.GetComponent<CharacterController>();
+            if (controller != null)
+            {
+                controller.enabled = false;
+                player.transform.position = spawnPoint.transform.position;
+                controller.enabled = true;
+            }
+
+                CapsuleCollider collider = player.GetComponent<CapsuleCollider>();
+                if (collider != null)
+                {
+                    collider.enabled = false;
+                    player.transform.position = spawnPoint.transform.position;
+                    collider.enabled = true;
+                }
+
+                // Force physics update
+                player.transform.position = spawnPoint.transform.position;
+                Physics.SyncTransforms();
+
+                Debug.Log($"Player moved to spawn point at: {spawnPoint.transform.position}");
+            }
+        else
+            {
+                Debug.LogError("Player object not found!");
+            }
+        }
+        else
+        {
+            Debug.LogError("Spawn point not found in the current scene!");
+        }
+
+        // Make the player temporarily invincible after respawn
+        StartCoroutine(BecomeTemporarilyInvincible());
+    }
+
+
 }

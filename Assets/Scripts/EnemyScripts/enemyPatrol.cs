@@ -52,8 +52,19 @@ public class EnemyPatrol : MonoBehaviour
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        currentState = (distanceToPlayer <= detectionRange) ? EnemyState.Chasing : EnemyState.Patrolling;
+        // Determine the current state based on player's proximity
+        if (distanceToPlayer <= detectionRange)
+        {
+            currentState = EnemyState.Chasing;
+            hasAggroed = true; // Aggro is active
+        }
+        else
+        {
+            currentState = EnemyState.Patrolling;
+            hasAggroed = false; // Reset aggro when player is out of range
+        }
 
+        // Execute behavior based on the current state
         if (currentState == EnemyState.Patrolling)
         {
             Patrol();
@@ -81,6 +92,7 @@ public class EnemyPatrol : MonoBehaviour
     {
         if (waypoints.Count == 0) return;
 
+        agent.stoppingDistance = stoppingDistance; // Reset stopping distance for patrol
         if (!agent.pathPending && agent.remainingDistance <= stoppingDistance)
         {
             waitTimer += Time.deltaTime;
@@ -99,7 +111,7 @@ public class EnemyPatrol : MonoBehaviour
     {
         if (player != null)
         {
-            agent.stoppingDistance = chaseStoppingDistance;
+            agent.stoppingDistance = chaseStoppingDistance; // Adjust stopping distance for chasing
             agent.SetDestination(player.position);
         }
     }
